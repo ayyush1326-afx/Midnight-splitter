@@ -22,9 +22,15 @@ Thumbs.db
 .vscode/
 .idea/
 
-# Rust / Cargo
+# Rust / Cargo build artifacts
 target/
 contracts/midnight_splitter/target/
+contracts/midnight_splitter/target_test/
+
+# Production build
+dist/
+build/
+
 
 # Gemini AI
 .agents/

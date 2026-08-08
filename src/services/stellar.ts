@@ -3,7 +3,7 @@ import { TokenInfo, SavedGroup } from '../types';
 
 export const STELLAR_TESTNET_HORIZON = 'https://horizon-testnet.stellar.org';
 export const STELLAR_TESTNET_SOROBAN_RPC = 'https://soroban-testnet.stellar.org';
-export const DEFAULT_CONTRACT_ID = 'CBQ2K7XHYF6T4K67R2X3D5LPMQOG3U2KPY3Z7C4J2F4P5W6K8N7M9XYZ';
+export const DEFAULT_CONTRACT_ID = 'CDG63NAWGK3CSAVXO7KNCV7ONGLUAXTY2JNOOPIHQNCL5ZDRZEUXEWIQ';
 
 export const SUPPORTED_TOKENS: TokenInfo[] = [
   {
