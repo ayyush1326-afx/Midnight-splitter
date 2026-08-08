@@ -7,20 +7,28 @@ import {
   SavedGroup,
   SplitReceipt,
   SimulationLog,
+  WalletProvider,
+  ZKProofData,
 } from './types';
 import {
   SUPPORTED_TOKENS,
   generateRandomStellarAddress,
+  generateRandomMidnightAddress,
   isValidStellarAddress,
+  isValidMultiChainAddress,
   connectFreighter,
+  connectLace,
   checkFreighterAvailable,
+  checkLaceAvailable,
   PRESET_GROUPS,
 } from './services/stellar';
+import { executeZKBalanceCircuit } from './services/zkCircuit';
 import { sounds } from './services/soundEffects';
 
 import { Navbar, ActivePage } from './components/Navbar';
 import { SplitterCard } from './components/SplitterCard';
 import { VisualBreakdown } from './components/VisualBreakdown';
+import { PrivacyProof } from './components/PrivacyProof';
 import { ToolsPage } from './components/ToolsPage';
 import { BulkImportModal } from './components/BulkImportModal';
 import { GroupsModal } from './components/GroupsModal';
@@ -36,9 +44,12 @@ export const App: React.FC = () => {
 
   // ── Wallet ──
   const [walletAddress, setWalletAddress] = useState<string>('');
+  const [walletProvider, setWalletProvider] = useState<WalletProvider>('lace');
   const [walletBalance, setWalletBalance] = useState<string>('0.00');
   const [isWalletConnected, setIsWalletConnected] = useState<boolean>(false);
   const [isConnecting, setIsConnecting] = useState<boolean>(false);
+  const [zkProof, setZkProof] = useState<ZKProofData | null>(null);
+
 
   // ── Split Config ──
   const [mode, setMode] = useState<SplitMode>('equal');
@@ -170,24 +181,68 @@ export const App: React.FC = () => {
     });
   };
 
-  const handleConnectWallet = async () => {
+  const handleConnectWallet = async (preferredProvider: WalletProvider = 'lace') => {
     setIsConnecting(true);
+    sounds.playClick();
+
+    if (preferredProvider === 'lace') {
+      const res = await connectLace();
+      if (res.address) {
+        setWalletAddress(res.address);
+        setWalletProvider('lace');
+        setWalletBalance('4,850.50');
+        setIsWalletConnected(true);
+        sounds.playSuccess();
+        const now = new Date().toLocaleTimeString();
+        setLogs((prev) => [
+          {
+            timestamp: now,
+            type: 'auth',
+            message: `Lace Wallet Connected (CIP-30): ${res.address.slice(0, 16)}… on ${res.network}`,
+          },
+          ...prev,
+        ]);
+        setIsConnecting(false);
+        return;
+      }
+    }
+
     const hasFreighter = await checkFreighterAvailable();
     if (hasFreighter) {
       const res = await connectFreighter();
       if (res.address) {
         setWalletAddress(res.address);
+        setWalletProvider('freighter');
         setWalletBalance('4,850.50');
         setIsWalletConnected(true);
         sounds.playSuccess();
+        const now = new Date().toLocaleTimeString();
+        setLogs((prev) => [
+          {
+            timestamp: now,
+            type: 'auth',
+            message: `Freighter Wallet Connected: ${res.address.slice(0, 12)}… on Stellar Testnet`,
+          },
+          ...prev,
+        ]);
       }
     } else {
-      // Freighter not installed — simulate demo wallet
-      const randomKey = generateRandomStellarAddress();
+      // Default: Lace simulated demo wallet on Midnight Preprod
+      const randomKey = generateRandomMidnightAddress();
       setWalletAddress(randomKey);
+      setWalletProvider('lace');
       setWalletBalance('4,850.50');
       setIsWalletConnected(true);
       sounds.playSuccess();
+      const now = new Date().toLocaleTimeString();
+      setLogs((prev) => [
+        {
+          timestamp: now,
+          type: 'auth',
+          message: `Lace Wallet Connected (Midnight Preprod): ${randomKey.slice(0, 16)}…`,
+        },
+        ...prev,
+      ]);
     }
     setIsConnecting(false);
   };
@@ -197,7 +252,9 @@ export const App: React.FC = () => {
     setIsWalletConnected(false);
     setWalletAddress('');
     setWalletBalance('0.00');
+    setZkProof(null);
   };
+
 
   const handleOpenFaucet = () => {
     sounds.playTransferStep(3);
@@ -288,7 +345,7 @@ export const App: React.FC = () => {
     }, 1200);
   };
 
-  const handleExecuteSplit = () => {
+  const handleExecuteSplit = async () => {
     if (count === 0 || effectiveTotal <= 0) return;
     setIsExecuting(true);
     sounds.playClick();
@@ -296,6 +353,32 @@ export const App: React.FC = () => {
     const timestamp = new Date().toLocaleTimeString();
     const txHash = `TX${Math.random().toString(36).substring(2, 12).toUpperCase()}90123SOROBAN`;
     const ledger = Math.floor(45000000 + Math.random() * 100000);
+
+    // Step 1: Run Zero-Knowledge Solvency Circuit
+    let proof: ZKProofData | null = zkProof;
+    try {
+      proof = await executeZKBalanceCircuit({
+        privateBalance: 4850.50,
+        splitRequirement: effectiveTotal,
+        recipientCount: count,
+        tokenSymbol: selectedToken.symbol,
+        senderAddress: walletAddress || 'GAT6E47IWY7ZPWZVRFLTXQ26W7G3E5R6WQX5E3L2A56QWE7R8TY90123',
+      });
+      if (proof) {
+        const verifiedProof: ZKProofData = proof;
+        setZkProof(verifiedProof);
+        setLogs((prev) => [
+          {
+            timestamp,
+            type: 'zk',
+            message: `ZK Solvency Proof Generated: ${verifiedProof.proofId.slice(0, 18)}… (balance proven ≥ ${effectiveTotal} ${selectedToken.symbol} with 0 balance leakage)`,
+          },
+          ...prev,
+        ]);
+      }
+    } catch (err: unknown) {
+      console.warn('ZK proof fallback:', err);
+    }
 
     setTimeout(() => sounds.playTransferStep(1), 300);
     setTimeout(() => sounds.playTransferStep(2), 600);
@@ -317,6 +400,7 @@ export const App: React.FC = () => {
         txHash,
         timestamp: new Date().toISOString().replace('T', ' ').substring(0, 19),
         sender: walletAddress,
+        walletProvider,
         token: selectedToken,
         mode,
         totalAmount: effectiveTotal,
@@ -332,8 +416,9 @@ export const App: React.FC = () => {
               ? Math.floor((effectiveTotal * (r.percentage || 0)) / 100)
               : parseFloat(r.customAmount || '0') || 0,
         })),
-        network: 'Stellar Testnet (Soroban)',
+        network: walletProvider === 'lace' ? 'Midnight Preprod (ZK-Protected)' : 'Stellar Testnet (Soroban)',
         blockLedger: ledger,
+        zkProof: proof || undefined,
       };
 
       setActiveReceipt(receipt);
@@ -372,6 +457,7 @@ export const App: React.FC = () => {
           activePage={activePage}
           onChangePage={setActivePage}
           walletAddress={walletAddress}
+          walletProvider={walletProvider}
           isWalletConnected={isWalletConnected}
           walletBalance={walletBalance}
           isConnecting={isConnecting}
@@ -419,11 +505,11 @@ export const App: React.FC = () => {
                       letterSpacing: '-0.01em',
                     }}
                   >
-                    Atomic Multi-Wallet{' '}
-                    <span style={{ color: 'var(--cyan)' }}>Bill Splitting</span>
+                    Privacy-Preserving Atomic{' '}
+                    <span style={{ color: 'var(--purple)' }}>Bill Splitting</span>
                   </h1>
                   <p style={{ fontSize: '0.75rem', color: 'var(--text-3)', marginTop: '1px' }}>
-                    Disburse any Stellar asset across multiple wallets in a single atomic transaction
+                    Zero-Knowledge Solvency Proof with Lace (CIP-30) & Soroban atomic settlement
                   </p>
                 </div>
               ) : (
@@ -440,7 +526,7 @@ export const App: React.FC = () => {
                     <span style={{ color: 'var(--purple)' }}>Tools</span>
                   </h1>
                   <p style={{ fontSize: '0.75rem', color: 'var(--text-3)', marginTop: '1px' }}>
-                    Simulate, inspect, and manage your Soroban split configuration
+                    Simulate, inspect, and verify your ZK privacy circuit & Soroban contracts
                   </p>
                 </div>
               )}
@@ -449,9 +535,9 @@ export const App: React.FC = () => {
             {/* Live stat chips */}
             <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
               {[
-                { label: 'Split Modes', value: '3', color: 'var(--cyan)' },
-                { label: 'Gas Fee', value: '~0.00005 XLM', color: 'var(--emerald)' },
-                { label: 'Guarantee', value: 'Atomic', color: 'var(--purple)' },
+                { label: 'Privacy Mode', value: 'Zero-Knowledge', color: 'var(--purple)' },
+                { label: 'Wallet', value: walletProvider === 'lace' ? 'Lace (CIP-30)' : 'Freighter', color: 'var(--cyan)' },
+                { label: 'Solvency Proof', value: zkProof?.verified ? 'Proven (Hidden)' : 'Ready', color: 'var(--emerald)' },
               ].map(({ label, value, color }) => (
                 <div
                   key={label}
@@ -491,9 +577,9 @@ export const App: React.FC = () => {
             <div
               className="page-enter"
               style={{
-                display: 'grid',
-                gridTemplateColumns: '1fr',
-                gap: '20px',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '24px',
               }}
             >
               {/* On large screens: 2-column grid */}
@@ -531,6 +617,7 @@ export const App: React.FC = () => {
                   isExecuting={isExecuting}
                   isWalletConnected={isWalletConnected}
                   onConnectWallet={handleConnectWallet}
+                  zkProof={zkProof}
                 />
 
                 {/* Right: Visual Breakdown */}
@@ -544,6 +631,16 @@ export const App: React.FC = () => {
                   tipAmount={tipAmount}
                 />
               </div>
+
+              {/* Zero-Knowledge Privacy Solvency Proof Card */}
+              <PrivacyProof
+                zkProof={zkProof}
+                totalAmount={effectiveTotal}
+                tokenSymbol={selectedToken.symbol}
+                senderAddress={walletAddress}
+                onProofGenerated={(proof) => setZkProof(proof)}
+                isWalletConnected={isWalletConnected}
+              />
             </div>
           )}
 
