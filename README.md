@@ -312,6 +312,22 @@ stellar contract invoke \
 
 ---
 
+## Screenshots
+
+### 🔗 Contract Deployment — Stellar Expert
+
+The successful deployment transaction on Stellar Testnet, showing the WASM upload and contract creation:
+
+![Stellar Expert — Deployment Transaction](screenshots/stellar-expert-transaction.png)
+
+### 📋 Contract Explorer — Stellar Lab
+
+The deployed contract on Stellar Lab, showing the Contract ID, creator account, WASM hash, and storage:
+
+![Stellar Lab — Contract Explorer](screenshots/stellar-lab-contract.png)
+
+---
+
 ## Contributing
 
 1. Fork the repository
