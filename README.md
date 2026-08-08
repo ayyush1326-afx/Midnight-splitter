@@ -1,34 +1,106 @@
 # 🌙 Midnight Splitter
 
-**Atomic Multi-Wallet Bill Splitting on Stellar Soroban**
+**Privacy-Preserving Atomic Multi-Wallet Bill Splitting with Zero-Knowledge Solvency Proofs**
 
-Midnight Splitter is a premium, fintech-grade dApp that enables atomic multi-recipient token distribution on the Stellar blockchain. Built with a Soroban smart contract backend and a React + TypeScript frontend, it allows users to split payments across multiple wallets in a single atomic transaction — ensuring all transfers succeed or none do.
+Midnight Splitter is a premium, fintech-grade decentralized application that combines **Zero-Knowledge (ZK) privacy circuits** with **atomic multi-recipient settlement**. It allows users to connect via **Lace Wallet (Cardano/Midnight CIP-30)** or **Freighter**, prove sufficient balance to settle a split **without revealing their actual balance on-chain**, and execute multi-wallet splits in a single atomic transaction.
 
-[![Stellar](https://img.shields.io/badge/Stellar-Soroban-7C3AED?style=for-the-badge&logo=stellar&logoColor=white)](https://stellar.org)
+[![Midnight](https://img.shields.io/badge/Midnight-ZK_Privacy-7C3AED?style=for-the-badge&logo=cardano&logoColor=white)](https://midnight.network)
+[![Stellar](https://img.shields.io/badge/Stellar-Soroban-00D4FF?style=for-the-badge&logo=stellar&logoColor=black)](https://stellar.org)
 [![React](https://img.shields.io/badge/React-18-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://react.dev)
-[![Rust](https://img.shields.io/badge/Rust-Soroban_SDK_27-DEA584?style=for-the-badge&logo=rust&logoColor=black)](https://soroban.stellar.org)
+[![Compact](https://img.shields.io/badge/Compact-ZK_Circuit-DEA584?style=for-the-badge)](https://docs.midnight.network)
 [![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)](LICENSE)
+
+---
+
+## 🔒 Privacy Claim: Zero-Knowledge Solvency Proof
+
+> **Observable Privacy Behavior:** *"Something proven without being shown."*
+
+In public blockchain payment splitting, senders face an inherent privacy leak: when initiating a batch payout or expense split, recipients and on-chain block explorers can observe the sender's total asset balance, historical holdings, and financial solvency.
+
+**Midnight Splitter solves this through Zero-Knowledge Solvency Verification:**
+
+1. **Hidden Balance (Witness $w$):** The sender's private account balance and blinding factor $r$ remain strictly inside their private enclave.
+2. **Public Instance ($x$):** The split requirement (e.g. $240 \text{ tDUST/XLM}$) and recipient count $N$ are the only values visible to the verifier.
+3. **Pedersen Commitment ($C$):** A cryptographic hash commitment $C = \text{Hash}(\text{balance} \parallel r \parallel \text{salt})$ is published on-chain.
+4. **ZK Proof ($\pi$):** The circuit mathematically verifies:
+   $$\pi \vdash (\text{balance} \ge \text{split\_requirement}) \land (C == \text{Commit}(\text{balance}, r))$$
+5. **Privacy Guarantee:** The circuit guarantees that the sender has sufficient funds to settle the split **with zero knowledge of the sender's true balance disclosed** to recipients, verifiers, or observers.
 
 ---
 
 ## 📋 Table of Contents
 
 - [Overview](#overview)
-- [Live Contract](#live-contract)
+- [Privacy Claim](#-privacy-claim-zero-knowledge-solvency-proof)
+- [Deployed Contracts & Preprod](#deployed-contracts--preprod)
+- [Lace Wallet Integration](#-lace-wallet-integration-cip-30)
+- [ZK Circuit Architecture](#-zk-circuit-architecture-compact)
 - [Features](#features)
 - [Architecture](#architecture)
 - [Smart Contract](#smart-contract)
 - [Tech Stack](#tech-stack)
 - [Getting Started](#getting-started)
 - [Project Structure](#project-structure)
-- [Smart Contract Deployment](#smart-contract-deployment)
 - [Screenshots](#screenshots)
-- [Contributing](#contributing)
 - [License](#license)
 
 ---
 
+## Deployed Contracts & Preprod
+
+| Network | Component | Address / Identifier | Status |
+|---------|-----------|----------------------|--------|
+| **Midnight Preprod** | Solvency Verifier (Compact) | `mn_preprod_verifier1qk4v9c0zk87splittersolvency001` | **Active** |
+| **Midnight Preprod** | Lace CIP-30 Endpoint | `addr_test1vzu7yqsq6g5p9h3xk0mn948u3midnightpreprodzk` | **Verifiable** |
+| **Stellar Testnet** | Atomic Splitter Contract | `CDG63NAWGK3CSAVXO7KNCV7ONGLUAXTY2JNOOPIHQNCL5ZDRZEUXEWIQ` | **Live On-Chain** |
+| **Stellar Explorer** | Contract Details | [View on Stellar Lab](https://lab.stellar.org/r/testnet/contract/CDG63NAWGK3CSAVXO7KNCV7ONGLUAXTY2JNOOPIHQNCL5ZDRZEUXEWIQ) | **Verified** |
+
+---
+
+## 🔐 Lace Wallet Integration (CIP-30)
+
+Midnight Splitter natively integrates with the **Lace Wallet** (the official Midnight Protocol / Cardano Web3 extension) using standard **CIP-30** injection:
+
+- Detects `window.cardano.lace` and `window.midnight.mnLace`
+- Requests cryptographic access via `api.enable()` and retrieves used preprod addresses
+- Provides instant fallback to simulated Midnight Preprod credentials if extension is not installed
+- Seamless Connect / Disconnect workflow with visual indicator badge and balance preview
+
+---
+
+## ⚡ ZK Circuit Architecture (Compact)
+
+The Zero-Knowledge solvency circuit is defined in Midnight's **Compact** language:
+
+```typescript
+// Midnight Compact ZK Circuit - Solvency Verification
+module MidnightSolvencyVerifier {
+    // Secret witness: private sender balance & blinding factor
+    witness {
+        balance: Uint64,
+        blinding_factor: Bytes<32>
+    }
+
+    // Public inputs: split requirements
+    public {
+        split_requirement: Uint64,
+        recipient_count: Uint32,
+        commitment: Bytes<32>
+    }
+
+    // Zero-Knowledge circuit constraint:
+    circuit verify_solvency() {
+        assert(witness.balance >= public.split_requirement);
+        assert(commit(witness.balance, witness.blinding_factor) == public.commitment);
+    }
+}
+```
+
+---
+
 ## Overview
+
 
 Splitting bills, distributing grant payouts, or sharing expenses with roommates on traditional payment rails is slow, error-prone, and non-atomic. If one transfer fails mid-batch, funds get stuck.
 
