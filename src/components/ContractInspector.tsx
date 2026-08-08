@@ -182,6 +182,20 @@ export const ContractInspector: React.FC<ContractInspectorProps> = ({
           >
             Atomicity & Dust Model
           </button>
+
+          <button
+            onClick={() => {
+              sounds.playClick();
+              setTab('compact' as any);
+            }}
+            style={{
+              padding: '6px 12px', borderRadius: 'var(--radius-sm)', fontSize: '0.75rem', fontWeight: 600, border: 'none', cursor: 'pointer', transition: 'all 0.15s ease',
+              background: (tab as string) === 'compact' ? 'var(--purple)' : 'transparent',
+              color: (tab as string) === 'compact' ? '#ffffff' : 'var(--text-3)',
+            }}
+          >
+            Midnight Compact (ZK Circuit)
+          </button>
         </div>
 
         {/* Tab Content */}
@@ -246,6 +260,46 @@ export const ContractInspector: React.FC<ContractInspectorProps> = ({
             </p>
             <div style={{ padding: '12px 14px', borderRadius: '6px', background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.2)', color: '#fbbf24' }}>
               <strong>Dust Retention Rule:</strong> dust = total_amount % N. Indivisible decimal fractions remain safely in the sender's wallet instead of being burned or locked.
+            </div>
+          </div>
+        )}
+
+        {(tab as string) === 'compact' && (
+          <div style={{ padding: '18px', borderRadius: 'var(--radius-lg)', background: '#080d1a', border: '1px solid rgba(139,92,246,0.3)', display: 'flex', flexDirection: 'column', gap: '12px', fontSize: '0.78rem', color: 'var(--text-3)', lineHeight: 1.6 }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <h4 style={{ fontSize: '0.88rem', fontWeight: 700, color: 'var(--purple)', fontFamily: 'var(--font-display)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Cpu style={{ width: '16px', height: '16px', color: 'var(--purple)' }} />
+                <span>Midnight Solvency Verifier (Compact ZK Language)</span>
+              </h4>
+              <span className="badge badge-green" style={{ fontSize: '10px' }}>PREPROD VERIFIER</span>
+            </div>
+
+            <pre style={{ padding: '14px', borderRadius: 'var(--radius-md)', background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(139,92,246,0.2)', color: 'var(--text-2)', fontFamily: 'var(--font-mono)', fontSize: '0.72rem', overflowX: 'auto', lineHeight: 1.6 }}>
+{`// Midnight Compact ZK Circuit - Solvency Verification
+module MidnightSolvencyVerifier {
+    // Secret witness: private sender balance & blinding factor
+    witness {
+        balance: Uint64,
+        blinding_factor: Bytes<32>
+    }
+
+    // Public inputs: split requirements
+    public {
+        split_requirement: Uint64,
+        recipient_count: Uint32,
+        commitment: Bytes<32>
+    }
+
+    // Zero-Knowledge circuit constraint:
+    circuit verify_solvency() {
+        assert(witness.balance >= public.split_requirement);
+        assert(commit(witness.balance, witness.blinding_factor) == public.commitment);
+    }
+}`}
+            </pre>
+
+            <div style={{ fontSize: '0.75rem', color: 'var(--text-3)' }}>
+              <strong>Observable Privacy Claim:</strong> Proves <code style={{ color: 'var(--cyan)' }}>witness.balance &gt;= split_requirement</code> while revealing zero information about the sender’s account balance.
             </div>
           </div>
         )}

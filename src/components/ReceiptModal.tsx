@@ -115,9 +115,40 @@ Dust Retained by Sender: ${receipt.dust} ${receipt.token.symbol}
           </div>
 
           <div className="flex items-center justify-between">
-            <span className="text-slate-400 font-medium">Stellar Network:</span>
-            <span className="font-semibold text-[#34d399]">Testnet (Soroban)</span>
+            <span className="text-slate-400 font-medium">Network & Settlement:</span>
+            <span className="font-semibold" style={{ color: receipt.walletProvider === 'lace' ? 'var(--purple)' : '#34d399' }}>
+              {receipt.network}
+            </span>
           </div>
+
+          {receipt.zkProof && (
+            <div
+              style={{
+                marginTop: '6px',
+                paddingTop: '8px',
+                borderTop: '1px dashed rgba(139, 92, 246, 0.3)',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '4px',
+              }}
+            >
+              <div className="flex items-center justify-between">
+                <span className="text-purple-400 font-semibold" style={{ color: 'var(--purple)' }}>
+                  ZK Privacy Proof (Compact):
+                </span>
+                <span className="font-mono text-emerald-400 font-bold" style={{ color: 'var(--emerald)' }}>
+                  VERIFIED (0 Fund Leakage)
+                </span>
+              </div>
+              <div className="flex items-center justify-between text-[11px]">
+                <span className="text-slate-400">Commitment Hash:</span>
+                <span className="font-mono text-slate-300">{receipt.zkProof.commitment.slice(0, 18)}…</span>
+              </div>
+              <div className="text-[11px] text-slate-400 italic">
+                {receipt.zkProof.privacyClaim}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Recipient Disbursements List */}
