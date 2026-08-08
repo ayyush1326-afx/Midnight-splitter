@@ -1,4 +1,5 @@
 export type SplitMode = 'equal' | 'weighted' | 'custom';
+export type WalletProvider = 'lace' | 'freighter' | 'demo';
 
 export interface TokenInfo {
   symbol: string;
@@ -47,11 +48,31 @@ export interface SavedGroup {
   createdAt: string;
 }
 
+export interface ZKProofData {
+  proofId: string;
+  commitment: string;
+  nullifierHash: string;
+  statement: string;
+  isSolvent: boolean;
+  verified: boolean;
+  timestamp: string;
+  circuitName: string;
+  provingTimeMs: number;
+  verificationGas: string;
+  publicInputs: {
+    splitRequirement: number;
+    tokenSymbol: string;
+    recipientCount: number;
+  };
+  privacyClaim: string;
+}
+
 export interface SplitReceipt {
   id: string;
   txHash: string;
   timestamp: string;
   sender: string;
+  walletProvider?: WalletProvider;
   token: TokenInfo;
   mode: SplitMode;
   totalAmount: number;
@@ -66,11 +87,13 @@ export interface SplitReceipt {
   note?: string;
   network: string;
   blockLedger: number;
+  zkProof?: ZKProofData;
 }
 
 export interface SimulationLog {
   timestamp: string;
-  type: 'info' | 'auth' | 'calc' | 'transfer' | 'event' | 'success' | 'warn';
+  type: 'info' | 'auth' | 'calc' | 'transfer' | 'event' | 'success' | 'warn' | 'zk';
   message: string;
   detail?: string;
 }
+

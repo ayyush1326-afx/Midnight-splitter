@@ -95,6 +95,17 @@ export function isValidStellarAddress(addr: string): boolean {
   return clean.length === 56 && clean.startsWith('G') && /^[A-Z2-7]{56}$/.test(clean);
 }
 
+// Helper to validate Cardano / Midnight address (starts with addr_test, mn_test, or G)
+export function isValidMultiChainAddress(addr: string): boolean {
+  if (!addr) return false;
+  const clean = addr.trim();
+  if (isValidStellarAddress(clean)) return true;
+  if (clean.startsWith('addr_test') || clean.startsWith('addr') || clean.startsWith('mn_test') || clean.startsWith('mn1')) {
+    return clean.length >= 30;
+  }
+  return clean.length >= 20;
+}
+
 // Generate random mock Stellar public key
 export function generateRandomStellarAddress(): string {
   const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
@@ -105,11 +116,21 @@ export function generateRandomStellarAddress(): string {
   return result;
 }
 
-// Shorten address for UI badge (e.g. GAT6...0123)
+// Generate mock Lace / Midnight address
+export function generateRandomMidnightAddress(): string {
+  const chars = '0123456789abcdefghijklmnopqrstuvwxyz';
+  let result = 'mn_test1';
+  for (let i = 0; i < 48; i++) {
+    result += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return result;
+}
+
+// Shorten address for UI badge (e.g. GAT6...0123 or mn_test1...99aa)
 export function shortenAddress(addr: string, chars = 4): string {
   if (!addr) return '';
   if (addr.length <= chars * 2 + 3) return addr;
-  return `${addr.slice(0, chars + 1)}...${addr.slice(-chars)}`;
+  return `${addr.slice(0, chars + 4)}...${addr.slice(-chars)}`;
 }
 
 // Check Freighter wallet availability
@@ -122,6 +143,64 @@ export async function checkFreighterAvailable(): Promise<boolean> {
     return false;
   } catch {
     return false;
+  }
+}
+
+// Check Lace / Midnight wallet availability via CIP-30 (window.cardano.lace or window.midnight)
+export async function checkLaceAvailable(): Promise<boolean> {
+  try {
+    if (typeof window === 'undefined') return false;
+    const cardano = (window as any).cardano;
+    const midnight = (window as any).midnight;
+    if (midnight?.mnLace || midnight?.lace) return true;
+    if (cardano?.lace) return true;
+    return false;
+  } catch {
+    return false;
+  }
+}
+
+// Connect Lace wallet (CIP-30 standard)
+export async function connectLace(): Promise<{ address: string; provider: 'lace'; network: string; error?: string }> {
+  try {
+    if (typeof window === 'undefined') {
+      return { address: '', provider: 'lace', network: 'Midnight Preprod', error: 'Window context missing' };
+    }
+    const cardano = (window as any).cardano;
+    const midnight = (window as any).midnight;
+    
+    // Check Midnight Lace extension
+    if (midnight?.mnLace) {
+      const api = await midnight.mnLace.enable();
+      const addrs = await api.getUsedAddresses?.();
+      if (addrs && addrs.length > 0) {
+        return { address: addrs[0], provider: 'lace', network: 'Midnight Preprod' };
+      }
+    }
+    
+    // Check Cardano Lace CIP-30
+    if (cardano?.lace) {
+      const api = await cardano.lace.enable();
+      const addrs = await api.getUsedAddresses?.();
+      if (addrs && addrs.length > 0) {
+        return { address: addrs[0], provider: 'lace', network: 'Midnight Preprod' };
+      }
+      const changeAddr = await api.getChangeAddress?.();
+      if (changeAddr) {
+        return { address: changeAddr, provider: 'lace', network: 'Midnight Preprod' };
+      }
+    }
+
+    // Fallback: If Lace not installed, generate a simulated Midnight Preprod Lace address
+    const mockLaceAddr = generateRandomMidnightAddress();
+    return {
+      address: mockLaceAddr,
+      provider: 'lace',
+      network: 'Midnight Preprod (CIP-30 Simulated)',
+    };
+  } catch (err: unknown) {
+    const errorMsg = err instanceof Error ? err.message : 'User rejected Lace wallet access';
+    return { address: '', provider: 'lace', network: 'Midnight Preprod', error: errorMsg };
   }
 }
 
@@ -151,3 +230,4 @@ export async function connectFreighter(): Promise<{ address: string; error?: str
     return { address: '', error: errorMsg };
   }
 }
+
