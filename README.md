@@ -9,6 +9,15 @@ Midnight Splitter is a premium, fintech-grade decentralized application that com
 [![React](https://img.shields.io/badge/React-18-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://react.dev)
 [![Compact](https://img.shields.io/badge/Compact-ZK_Circuit-DEA584?style=for-the-badge)](https://docs.midnight.network)
 [![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)](LICENSE)
+[![Live Demo](https://img.shields.io/badge/Live_Demo-Vercel-black?style=for-the-badge&logo=vercel&logoColor=white)](https://midnight-splitter-chi.vercel.app)
+
+---
+
+## 🚀 Live Demo
+
+> **[https://midnight-splitter-chi.vercel.app](https://midnight-splitter-chi.vercel.app)**
+
+Deployed on Vercel — connect your Lace or Freighter wallet, run a ZK solvency proof, and execute an atomic multi-wallet split in seconds.
 
 ---
 
