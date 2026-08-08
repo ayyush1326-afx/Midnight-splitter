@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { shortenAddress } from '../services/stellar';
 import { sounds } from '../services/soundEffects';
+import { WalletProvider } from '../types';
 
 export type ActivePage = 'split' | 'tools';
 
@@ -22,10 +23,11 @@ interface NavbarProps {
   activePage: ActivePage;
   onChangePage: (page: ActivePage) => void;
   walletAddress: string;
+  walletProvider?: WalletProvider;
   isWalletConnected: boolean;
   walletBalance: string;
   isConnecting: boolean;
-  onConnectWallet: () => void;
+  onConnectWallet: (provider?: WalletProvider) => void;
   onDisconnectWallet: () => void;
   onOpenFaucet: () => void;
   soundEnabled: boolean;
@@ -39,6 +41,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   activePage,
   onChangePage,
   walletAddress,
+  walletProvider = 'lace',
   isWalletConnected,
   walletBalance,
   isConnecting,
@@ -51,6 +54,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   isLightTheme,
   onToggleTheme,
 }) => {
+
   return (
     <header
       className="sticky top-0 z-50 backdrop-blur-xl"
@@ -273,9 +277,19 @@ export const Navbar: React.FC<NavbarProps> = ({
                 className="md:flex flex-col items-end"
                 style={{ display: 'none', lineHeight: 1.3 }}
               >
-                <span style={{ fontSize: '0.65rem', color: 'var(--text-3)', fontWeight: 600 }}>
-                  Testnet Balance
-                </span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  <span
+                    style={{
+                      fontSize: '0.62rem',
+                      color: walletProvider === 'lace' ? 'var(--purple)' : 'var(--cyan)',
+                      fontWeight: 800,
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.04em',
+                    }}
+                  >
+                    {walletProvider === 'lace' ? 'Lace (CIP-30)' : 'Freighter'}
+                  </span>
+                </div>
                 <span
                   style={{
                     fontSize: '0.8rem',
@@ -284,7 +298,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                     fontFamily: 'var(--font-mono)',
                   }}
                 >
-                  {walletBalance} XLM
+                  {walletBalance} {walletProvider === 'lace' ? 'tDUST' : 'XLM'}
                 </span>
               </div>
               <button
@@ -295,8 +309,8 @@ export const Navbar: React.FC<NavbarProps> = ({
                   alignItems: 'center',
                   gap: '7px',
                   padding: '7px 12px',
-                  background: 'var(--emerald-dim)',
-                  border: '1px solid rgba(16,185,129,0.25)',
+                  background: walletProvider === 'lace' ? 'rgba(139, 92, 246, 0.15)' : 'var(--emerald-dim)',
+                  border: `1px solid ${walletProvider === 'lace' ? 'rgba(139, 92, 246, 0.35)' : 'rgba(16,185,129,0.25)'}`,
                   borderRadius: 'var(--radius-full)',
                   cursor: 'pointer',
                   transition: 'all 0.2s ease',
@@ -305,17 +319,25 @@ export const Navbar: React.FC<NavbarProps> = ({
                   const btn = e.currentTarget;
                   btn.style.background = 'var(--rose-dim)';
                   btn.style.borderColor = 'rgba(244,63,94,0.35)';
-                  btn.querySelector('.wallet-addr')!.textContent = 'Disconnect';
-                  (btn.querySelector('.wallet-addr') as HTMLElement).style.color = 'var(--rose)';
-                  (btn.querySelector('.wallet-dot') as HTMLElement).style.background = 'var(--rose)';
+                  const textEl = btn.querySelector('.wallet-addr');
+                  if (textEl) {
+                    textEl.textContent = 'Disconnect';
+                    (textEl as HTMLElement).style.color = 'var(--rose)';
+                  }
+                  const dotEl = btn.querySelector('.wallet-dot');
+                  if (dotEl) (dotEl as HTMLElement).style.background = 'var(--rose)';
                 }}
                 onMouseLeave={(e) => {
                   const btn = e.currentTarget;
-                  btn.style.background = 'var(--emerald-dim)';
-                  btn.style.borderColor = 'rgba(16,185,129,0.25)';
-                  btn.querySelector('.wallet-addr')!.textContent = shortenAddress(walletAddress, 3);
-                  (btn.querySelector('.wallet-addr') as HTMLElement).style.color = 'var(--emerald)';
-                  (btn.querySelector('.wallet-dot') as HTMLElement).style.background = 'var(--emerald)';
+                  btn.style.background = walletProvider === 'lace' ? 'rgba(139, 92, 246, 0.15)' : 'var(--emerald-dim)';
+                  btn.style.borderColor = walletProvider === 'lace' ? 'rgba(139, 92, 246, 0.35)' : 'rgba(16,185,129,0.25)';
+                  const textEl = btn.querySelector('.wallet-addr');
+                  if (textEl) {
+                    textEl.textContent = shortenAddress(walletAddress, 3);
+                    (textEl as HTMLElement).style.color = walletProvider === 'lace' ? 'var(--purple)' : 'var(--emerald)';
+                  }
+                  const dotEl = btn.querySelector('.wallet-dot');
+                  if (dotEl) (dotEl as HTMLElement).style.background = walletProvider === 'lace' ? 'var(--purple)' : 'var(--emerald)';
                 }}
               >
                 <span
@@ -324,7 +346,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                     width: '7px',
                     height: '7px',
                     borderRadius: '50%',
-                    background: 'var(--emerald)',
+                    background: walletProvider === 'lace' ? 'var(--purple)' : 'var(--emerald)',
                     flexShrink: 0,
                     display: 'block',
                     transition: 'background 0.2s ease',
@@ -336,7 +358,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                     fontSize: '0.75rem',
                     fontWeight: 700,
                     fontFamily: 'var(--font-mono)',
-                    color: 'var(--emerald)',
+                    color: walletProvider === 'lace' ? 'var(--purple)' : 'var(--emerald)',
                     transition: 'color 0.2s ease',
                   }}
                 >
@@ -345,22 +367,29 @@ export const Navbar: React.FC<NavbarProps> = ({
               </button>
             </div>
           ) : (
-            <button
-              onClick={() => {
-                sounds.playClick();
-                onConnectWallet();
-              }}
-              disabled={isConnecting}
-              className="btn-primary shrink-0"
-              style={{ padding: '9px 16px', fontSize: '0.82rem' }}
-            >
-              {isConnecting ? (
-                <Loader2 style={{ width: '14px', height: '14px' }} className="animate-spin" />
-              ) : (
-                <Wallet style={{ width: '14px', height: '14px' }} />
-              )}
-              <span>{isConnecting ? 'Connecting…' : 'Connect Wallet'}</span>
-            </button>
+            <div style={{ display: 'flex', gap: '6px' }}>
+              <button
+                onClick={() => {
+                  sounds.playClick();
+                  onConnectWallet('lace');
+                }}
+                disabled={isConnecting}
+                className="btn-primary shrink-0"
+                style={{
+                  padding: '8px 14px',
+                  fontSize: '0.8rem',
+                  background: 'linear-gradient(135deg, var(--purple) 0%, #7c3aed 100%)',
+                }}
+                title="Connect Lace Wallet (Midnight Preprod CIP-30)"
+              >
+                {isConnecting ? (
+                  <Loader2 style={{ width: '13px', height: '13px' }} className="animate-spin" />
+                ) : (
+                  <Wallet style={{ width: '13px', height: '13px' }} />
+                )}
+                <span>{isConnecting ? 'Connecting…' : 'Connect Lace'}</span>
+              </button>
+            </div>
           )}
         </div>
       </div>

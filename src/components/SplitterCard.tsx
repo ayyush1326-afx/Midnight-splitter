@@ -18,8 +18,8 @@ import {
   Wallet,
   DollarSign,
 } from 'lucide-react';
-import { Recipient, TokenInfo, SplitMode } from '../types';
-import { isValidStellarAddress, shortenAddress } from '../services/stellar';
+import { Recipient, TokenInfo, SplitMode, ZKProofData } from '../types';
+import { isValidMultiChainAddress, shortenAddress } from '../services/stellar';
 import { sounds } from '../services/soundEffects';
 
 interface SplitterCardProps {
@@ -46,7 +46,9 @@ interface SplitterCardProps {
   isExecuting: boolean;
   isWalletConnected: boolean;
   onConnectWallet: () => void;
+  zkProof?: ZKProofData | null;
 }
+
 
 const MODE_TABS: { mode: SplitMode; label: string; Icon: React.FC<{ style?: React.CSSProperties }> }[] = [
   { mode: 'equal',    label: 'Equal Split',     Icon: Calculator },
@@ -567,13 +569,13 @@ export const SplitterCard: React.FC<SplitterCardProps> = ({
                 <div style={{ position: 'relative', flex: 1, minWidth: '160px' }}>
                   <input
                     type="text"
-                    placeholder="Stellar Public Key (G… 56 chars)"
+                    placeholder="Address (G… or mn_test1…)"
                     value={recipient.address}
                     onChange={(e) => {
                       const clean = e.target.value.trim();
                       onUpdateRecipient(recipient.id, {
                         address: clean,
-                        isValidAddress: isValidStellarAddress(clean),
+                        isValidAddress: isValidMultiChainAddress(clean),
                       });
                     }}
                     className="app-input app-input-mono"
