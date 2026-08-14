@@ -1,5 +1,42 @@
 import * as freighter from '@stellar/freighter-api';
+import type {
+  InitialAPI,
+  ConnectedAPI,
+  WalletConnectedAPI,
+  ConnectionStatus,
+} from '@midnight-ntwrk/dapp-connector-api';
+import {
+  createNetworkProviders,
+  getPreprodProviders,
+  PREPROD_CONFIG,
+  type MidnightNetworkConfig,
+  type MidnightProviders,
+  type PublicDataProvider,
+  type ProofProvider,
+  type ContractState,
+  type NetworkId,
+} from '@midnight-ntwrk/midnight-js-network-provider';
 import { TokenInfo, SavedGroup } from '../types';
+
+// ── Re-export Midnight SDK types for use in other modules ──────────────────────
+export type {
+  InitialAPI,
+  ConnectedAPI,
+  WalletConnectedAPI,
+  ConnectionStatus,
+  MidnightNetworkConfig,
+  MidnightProviders,
+  PublicDataProvider,
+  ProofProvider,
+  ContractState,
+  NetworkId,
+};
+
+/**
+ * Shared Midnight Preprod network providers (public data + ZK proof provider).
+ * Initialized lazily on first access via getPreprodProviders().
+ */
+export { createNetworkProviders, getPreprodProviders, PREPROD_CONFIG };
 
 export const STELLAR_TESTNET_HORIZON = 'https://horizon-testnet.stellar.org';
 export const STELLAR_TESTNET_SOROBAN_RPC = 'https://soroban-testnet.stellar.org';
@@ -146,10 +183,49 @@ export async function checkFreighterAvailable(): Promise<boolean> {
   }
 }
 
-// Check Lace / Midnight wallet availability via CIP-30 (window.cardano.lace or window.midnight)
+/**
+ * Discovers Midnight DApp Connector wallets (Lace / 1AM) via the typed
+ * @midnight-ntwrk/dapp-connector-api InitialAPI injected at window.midnight.
+ *
+ * The DApp Connector API (CAIP-372 draft) injects wallets as:
+ *   window.midnight.<uuid>  →  InitialAPI
+ *
+ * @returns The first discovered InitialAPI, or null if none installed.
+ */
+function discoverMidnightWallet(): InitialAPI | null {
+  try {
+    if (typeof window === 'undefined') return null;
+    const midnight = (window as Record<string, any>).midnight;
+    if (!midnight) return null;
+
+    // Iterate UUID-keyed wallet instances (CAIP-372 pattern)
+    for (const key of Object.keys(midnight)) {
+      const candidate = midnight[key] as Partial<InitialAPI>;
+      if (
+        candidate &&
+        typeof candidate.connect === 'function' &&
+        typeof candidate.apiVersion === 'string'
+      ) {
+        return candidate as InitialAPI;
+      }
+    }
+
+    // Legacy: window.midnight.mnLace (older Lace extension)
+    if (typeof midnight.mnLace?.enable === 'function') {
+      return null; // handled separately below
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+// Check Lace / Midnight wallet availability via DApp Connector API or legacy CIP-30
 export async function checkLaceAvailable(): Promise<boolean> {
   try {
     if (typeof window === 'undefined') return false;
+    // Check for CAIP-372 compliant Midnight wallet
+    if (discoverMidnightWallet() !== null) return true;
     const cardano = (window as any).cardano;
     const midnight = (window as any).midnight;
     if (midnight?.mnLace || midnight?.lace) return true;
@@ -160,16 +236,58 @@ export async function checkLaceAvailable(): Promise<boolean> {
   }
 }
 
-// Connect Lace wallet (CIP-30 standard)
+/**
+ * Queries the MidnightSplitter contract state on Midnight Preprod using the
+ * @midnight-ntwrk/midnight-js-network-provider public data provider.
+ */
+export async function queryContractState(
+  contractAddress: string = DEFAULT_CONTRACT_ID
+): Promise<ContractState | null> {
+  const { publicDataProvider } = getPreprodProviders();
+  return publicDataProvider.queryContractState(contractAddress);
+}
+
+/**
+ * Connect Lace wallet via @midnight-ntwrk/dapp-connector-api (CAIP-372 / CIP-30).
+ *
+ * Priority:
+ *   1. CAIP-372 compliant Midnight DApp Connector API (InitialAPI.connect)
+ *   2. Legacy window.midnight.mnLace.enable() (older Lace builds)
+ *   3. Legacy window.cardano.lace.enable() (Cardano CIP-30)
+ *   4. Simulated fallback address for demo / Preprod testing
+ */
 export async function connectLace(): Promise<{ address: string; provider: 'lace'; network: string; error?: string }> {
   try {
     if (typeof window === 'undefined') {
       return { address: '', provider: 'lace', network: 'Midnight Preprod', error: 'Window context missing' };
     }
+
+    // ── 1. Try CAIP-372 Midnight DApp Connector API ──────────────────────────
+    const walletApi: InitialAPI | null = discoverMidnightWallet();
+    if (walletApi) {
+      const connected: ConnectedAPI = await walletApi.connect('preprod');
+      // WalletConnectedAPI: get shielded address (Midnight Preprod)
+      const walletConnected: WalletConnectedAPI = connected;
+      try {
+        const { shieldedAddress } = await walletConnected.getShieldedAddresses();
+        if (shieldedAddress) {
+          return { address: shieldedAddress, provider: 'lace', network: 'Midnight Preprod' };
+        }
+      } catch {
+        // getUnshieldedAddress fallback
+        try {
+          const { unshieldedAddress } = await walletConnected.getUnshieldedAddress();
+          if (unshieldedAddress) {
+            return { address: unshieldedAddress, provider: 'lace', network: 'Midnight Preprod' };
+          }
+        } catch { /* fall through */ }
+      }
+    }
+
     const cardano = (window as any).cardano;
     const midnight = (window as any).midnight;
-    
-    // Check Midnight Lace extension
+
+    // ── 2. Legacy: window.midnight.mnLace (older Lace extension) ─────────────
     if (midnight?.mnLace) {
       const api = await midnight.mnLace.enable();
       const addrs = await api.getUsedAddresses?.();
@@ -177,8 +295,8 @@ export async function connectLace(): Promise<{ address: string; provider: 'lace'
         return { address: addrs[0], provider: 'lace', network: 'Midnight Preprod' };
       }
     }
-    
-    // Check Cardano Lace CIP-30
+
+    // ── 3. Legacy: Cardano Lace CIP-30 ───────────────────────────────────────
     if (cardano?.lace) {
       const api = await cardano.lace.enable();
       const addrs = await api.getUsedAddresses?.();
@@ -191,7 +309,7 @@ export async function connectLace(): Promise<{ address: string; provider: 'lace'
       }
     }
 
-    // Fallback: If Lace not installed, generate a simulated Midnight Preprod Lace address
+    // ── 4. Fallback: simulated Midnight Preprod address ───────────────────────
     const mockLaceAddr = generateRandomMidnightAddress();
     return {
       address: mockLaceAddr,

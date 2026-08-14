@@ -1,0 +1,9 @@
+{
+  "name": "@midnight-ntwrk/midnight-js-network-provider",
+  "version": "4.1.1",
+  "description": "Midnight.js Network Provider — local shim for Midnight Preprod / Testnet",
+  "type": "module",
+  "main": "./index.ts",
+  "types": "./index.ts",
+  "license": "Apache-2.0"
+}
