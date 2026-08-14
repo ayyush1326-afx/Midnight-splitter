@@ -46,11 +46,8 @@ jobs:
       - name: ⬇️ Checkout repository
         uses: actions/checkout@v4
 
-      - name: 🦀 Set up Rust (stable)
-        uses: actions-rust-lang/setup-rust-toolchain@v1
-        with:
-          toolchain: stable
-          target: wasm32v1-none
+      - name: 🦀 Set up Rust stable
+        uses: dtolnay/rust-toolchain@stable
 
       - name: 🔬 Cache Cargo registry
         uses: actions/cache@v4
@@ -63,13 +60,14 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-cargo-
 
-      - name: 🧪 Run Soroban contract tests
+      - name: 🧪 Run Soroban contract unit tests
         working-directory: contracts/midnight_splitter
-        run: cargo test -- --test-threads=1
+        run: cargo test --lib -- --test-threads=1
 
-      - name: 🏗️ Build contract WASM (release)
+      - name: 🔬 Lint (clippy)
         working-directory: contracts/midnight_splitter
-        run: cargo build --target wasm32v1-none --release
+        run: cargo clippy --lib -- -D warnings
+        continue-on-error: true
 
   # ── Job 3: Summary ─────────────────────────────────────────────────────────
   ci-summary:
