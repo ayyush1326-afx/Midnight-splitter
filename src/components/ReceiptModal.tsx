@@ -11,17 +11,20 @@ import { shortenAddress } from '../services/stellar';
 import { sounds } from '../services/soundEffects';
 
 interface ReceiptModalProps {
+  isOpen?: boolean;
   receipt: SplitReceipt | null;
   onClose: () => void;
 }
 
 export const ReceiptModal: React.FC<ReceiptModalProps> = ({
+  isOpen = true,
   receipt,
   onClose,
 }) => {
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
+    if (!isOpen) return;
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         onClose();
@@ -29,9 +32,9 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [onClose]);
+  }, [isOpen, onClose]);
 
-  if (!receipt) return null;
+  if (!isOpen || !receipt) return null;
 
   const handleCopyProof = () => {
     sounds.playClick();

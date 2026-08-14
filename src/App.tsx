@@ -687,6 +687,7 @@ export const App: React.FC = () => {
         recipients={recipients}
       />
       <ReceiptModal
+        isOpen={isReceiptOpen}
         receipt={activeReceipt}
         onClose={() => setIsReceiptOpen(false)}
       />
