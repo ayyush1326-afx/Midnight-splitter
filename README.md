@@ -467,12 +467,45 @@ stellar contract invoke \
 
 ---
 
-## Screenshots
+## 📸 Screenshots & Demo Evidence
 
-### 🔗 Contract Deployment — Stellar Expert
+### 🎬 Live Demo & Recording
+- **Live dApp URL**: [https://midnight-splitter-chi.vercel.app](https://midnight-splitter-chi.vercel.app)
+- **Demo Recording**: [`screenshots/demo-recording.webp`](screenshots/demo-recording.webp)
+
+---
+
+### 🟢 GitHub Actions CI/CD Pipeline (All 3 Jobs Passing)
+![GitHub Actions CI Run Summary](screenshots/ci-passing-run.png)
+
+---
+
+### 🔐 Lace Wallet (CIP-30 / CAIP-372) Connected
+![Lace Wallet Connected](screenshots/wallet-connected.png)
+
+---
+
+### 🔒 Zero-Knowledge Solvency Proof Generated
+![ZK Solvency Proof Complete](screenshots/zk-proof-complete.png)
+
+---
+
+### 📜 Atomic Split Receipt & ZK Proof Certificate
+![Split Receipt Modal](screenshots/split-receipt-modal.png)
+
+---
+
+### 🛠️ Developer Tools & Contract Inspector
+![Developer Tools Page](screenshots/developer-tools-page.png)
+
+---
+
+### 🔗 Soroban CLI Contract Deployment — Stellar Expert
 ![Stellar Expert — Deployment Transaction](screenshots/stellar-expert-transaction.png)
 
-### 📋 Contract Explorer — Stellar Lab
+---
+
+### 📋 Soroban Contract Details — Stellar Lab Explorer
 ![Stellar Lab — Contract Explorer](screenshots/stellar-lab-contract.png)
 
 ---
