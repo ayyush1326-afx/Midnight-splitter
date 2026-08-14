@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   X, 
   CheckCircle2, 
@@ -20,6 +20,16 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({
   onClose,
 }) => {
   const [copied, setCopied] = useState(false);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [onClose]);
 
   if (!receipt) return null;
 
@@ -46,16 +56,29 @@ Dust Retained by Sender: ${receipt.dust} ${receipt.token.symbol}
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(6,8,16,0.85)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)' }}>
-      <div className="glass-card w-full max-w-lg flex flex-col gap-6 relative" style={{ padding: '28px 32px', maxHeight: '90vh', overflowY: 'auto' }}>
+    <div 
+      className="fixed inset-0 z-50 flex items-center justify-center p-4" 
+      style={{ background: 'rgba(6,8,16,0.85)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)' }}
+      onClick={() => {
+        sounds.playClick();
+        onClose();
+      }}
+    >
+      <div 
+        className="glass-card w-full max-w-lg flex flex-col gap-6 relative" 
+        style={{ padding: '28px 32px', maxHeight: '90vh', overflowY: 'auto' }}
+        onClick={(e) => e.stopPropagation()}
+      >
         
-        {/* Close Button */}
+        {/* Top Header Close Button */}
         <button
           onClick={() => {
             sounds.playClick();
             onClose();
           }}
-          className="absolute top-6 right-6 p-2 rounded-xl bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white transition"
+          className="absolute top-6 right-6 p-2 rounded-xl bg-white/10 hover:bg-white/20 text-slate-300 hover:text-white transition cursor-pointer"
+          title="Close Receipt (Esc)"
+          aria-label="Close modal"
         >
           <X className="w-5 h-5" />
         </button>
@@ -176,24 +199,37 @@ Dust Retained by Sender: ${receipt.dust} ${receipt.token.symbol}
           </div>
         </div>
 
-        {/* Actions */}
-        <div className="flex items-center justify-between gap-3 pt-2 border-t border-white/10">
-          <button
-            onClick={handleCopyProof}
-            className="btn-ghost flex items-center gap-1.5"
-            style={{ fontSize: '0.78rem', padding: '8px 14px' }}
-          >
-            {copied ? <Check className="w-4 h-4" style={{ color: 'var(--emerald)' }} /> : <Copy className="w-4 h-4" />}
-            <span>{copied ? 'Proof Copied!' : 'Copy Proof'}</span>
-          </button>
+        {/* Actions Footer */}
+        <div className="flex items-center justify-between flex-wrap gap-3 pt-3 border-t border-white/10">
+          <div className="flex items-center gap-2">
+            <button
+              onClick={handleCopyProof}
+              className="btn-ghost flex items-center gap-1.5"
+              style={{ fontSize: '0.78rem', padding: '8px 14px' }}
+            >
+              {copied ? <Check className="w-4 h-4" style={{ color: 'var(--emerald)' }} /> : <Copy className="w-4 h-4" />}
+              <span>{copied ? 'Copied!' : 'Copy Proof'}</span>
+            </button>
+
+            <button
+              onClick={handlePrint}
+              className="btn-ghost flex items-center gap-1.5"
+              style={{ fontSize: '0.78rem', padding: '8px 14px' }}
+            >
+              <Printer className="w-4 h-4" />
+              <span>Print</span>
+            </button>
+          </div>
 
           <button
-            onClick={handlePrint}
+            onClick={() => {
+              sounds.playClick();
+              onClose();
+            }}
             className="btn-primary flex items-center gap-1.5"
-            style={{ fontSize: '0.82rem', padding: '10px 20px' }}
+            style={{ fontSize: '0.85rem', padding: '10px 22px' }}
           >
-            <Printer className="w-4 h-4" />
-            <span>Print Receipt</span>
+            <span>Close Receipt</span>
           </button>
         </div>
 
@@ -201,3 +237,4 @@ Dust Retained by Sender: ${receipt.dust} ${receipt.token.symbol}
     </div>
   );
 };
+
