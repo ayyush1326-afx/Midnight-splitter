@@ -6,7 +6,6 @@ Midnight Splitter is a production-grade, privacy-preserving dApp built on **Midn
 
 [![CI](https://github.com/ayyush1326-afx/Midnight-splitter/actions/workflows/ci.yml/badge.svg)](https://github.com/ayyush1326-afx/Midnight-splitter/actions/workflows/ci.yml)
 [![Live Demo](https://img.shields.io/badge/Live_Demo-Vercel-black?style=flat-square&logo=vercel&logoColor=white)](https://midnight-splitter-chi.vercel.app)
-[![Demo Video](https://img.shields.io/badge/Demo_Video-Watch_1--Min-red?style=flat-square&logo=youtube&logoColor=white)](https://youtu.be/midnight-splitter-demo)
 [![Midnight SDK](https://img.shields.io/badge/Midnight_SDK-dapp--connector--api_v4-7C3AED?style=flat-square&logo=cardano&logoColor=white)](https://midnight.network)
 [![Compact DSL](https://img.shields.io/badge/Compact_DSL-v0.1.0-8B5CF6?style=flat-square)](https://docs.midnight.network)
 [![Midnight CLI](https://img.shields.io/badge/Midnight_CLI-compactc-10B981?style=flat-square)](https://docs.midnight.network)
@@ -16,10 +15,14 @@ Midnight Splitter is a production-grade, privacy-preserving dApp built on **Midn
 
 ---
 
-## 🚀 Live Demo & Demo Video
+## 🚀 Live Demo & Demo Video Walkthrough
 
 - 🌐 **Live Web Application**: [https://midnight-splitter-chi.vercel.app](https://midnight-splitter-chi.vercel.app)
-- 🎥 **1-Minute Walkthrough Video**: [Watch Demo Video on YouTube](https://youtu.be/midnight-splitter-demo)
+- 🎥 **1-Minute Interactive Demo Preview**:
+
+![Demo Walkthrough Preview](screenshots/demo-recording.webp)
+
+> *Note: If you have uploaded your own YouTube / Loom video, replace the URL in `README.md` with your video link.*
 
 ---
 
@@ -187,11 +190,8 @@ Supports injected **Lace Wallet** using `@midnight-ntwrk/dapp-connector-api`:
 ## 🔄 CI/CD Pipeline
 
 The project includes an automated GitHub Actions CI/CD workflow at [`.github/workflows/ci.yml`](file:///c:/Users/Dell/midnight%20splitter/.github/workflows/ci.yml):
-- TypeScript compilation check (`npx tsc --noEmit`)
-- Execution of **26 Vitest unit tests**
-- Compact DSL contract existence & structure verification
-- Midnight CLI config validation
-- Production bundle build (`npm run build`)
+- **Job 1**: `Frontend & ZK Circuits (Node 20.x)` (runs `npx tsc`, 26 Vitest unit tests, and production build)
+- **Job 2**: `Midnight Compact Contract (.compact)` (validates Compact contract DSL syntax and `midnight-cli.json`)
 
 ![CI/CD Badge](https://github.com/ayyush1326-afx/Midnight-splitter/actions/workflows/ci.yml/badge.svg)
 
