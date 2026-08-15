@@ -15,12 +15,9 @@ Midnight Splitter is a production-grade, privacy-preserving dApp built on **Midn
 
 ---
 
-## 🎥 Application Demo Video & Live Application
+## 🚀 Live Demo Application
 
 - 🌐 **Live Web Application**: [https://midnight-splitter-chi.vercel.app](https://midnight-splitter-chi.vercel.app)
-- 🎬 **Application Demo Video Walkthrough**:
-
-![Application Demo Video Walkthrough](screenshots/demo-recording.webp)
 
 ---
 
