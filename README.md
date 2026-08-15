@@ -103,6 +103,9 @@ Midnight Splitter solves this with **selective disclosure**:
 ### 6. Developer Tools & Test Suite Overview
 ![Developer Tools Page](screenshots/developer-tools-page.png)
 
+### 7. GitHub Actions CI/CD Passing Pipeline Run
+![CI/CD Passing Run](screenshots/ci-passing-run.png)
+
 ---
 
 ## 📜 Compact Smart Contract Code
