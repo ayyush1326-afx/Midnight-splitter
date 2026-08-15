@@ -79,7 +79,7 @@ export const SimulationSandbox: React.FC<SimulationSandboxProps> = ({
           <div style={{ display: 'flex', alignItems: 'center', gap: '7px' }}>
             <Terminal style={{ width: '13px', height: '13px', color: 'var(--purple)' }} />
             <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-2)', fontFamily: 'var(--font-mono)' }}>
-              soroban-sandbox ~ MidnightSplitterContract
+              midnight-cli sandbox ~ midnight_splitter.compact
             </span>
           </div>
         </div>
@@ -121,7 +121,7 @@ export const SimulationSandbox: React.FC<SimulationSandboxProps> = ({
           ) : (
             <Play style={{ width: '13px', height: '13px' }} />
           )}
-          <span>{isSimulating ? 'Simulating…' : 'Simulate Tx'}</span>
+          <span>{isSimulating ? 'Simulating…' : 'Simulate Compact Tx'}</span>
         </button>
       </div>
 
@@ -154,7 +154,7 @@ export const SimulationSandbox: React.FC<SimulationSandboxProps> = ({
           >
             <Terminal style={{ width: '28px', height: '28px', opacity: 0.25 }} />
             <span style={{ fontSize: '0.78rem' }}>
-              Click <strong style={{ color: 'var(--purple)' }}>Simulate Tx</strong> to preview execution logs
+              Click <strong style={{ color: 'var(--purple)' }}>Simulate Compact Tx</strong> to preview execution logs
             </span>
           </div>
         ) : (
@@ -202,11 +202,11 @@ export const SimulationSandbox: React.FC<SimulationSandboxProps> = ({
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--text-3)' }}>
           <ShieldCheck style={{ width: '12px', height: '12px', color: 'var(--emerald)' }} />
-          <span>HostFunction::InvokeContract</span>
+          <span>CompactCircuit::export_split_equal</span>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <span style={{ color: 'var(--cyan)', fontFamily: 'var(--font-mono)', fontWeight: 600 }}>
-            require_auth(sender) ✓
+          <span style={{ color: 'var(--purple)', fontFamily: 'var(--font-mono)', fontWeight: 600 }}>
+            Compact Prover &amp; ZK Solvency Witness ✓
           </span>
           <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
             <span
@@ -219,7 +219,7 @@ export const SimulationSandbox: React.FC<SimulationSandboxProps> = ({
                 background: 'var(--emerald)',
               }}
             />
-            <span style={{ color: 'var(--text-3)' }}>Testnet</span>
+            <span style={{ color: 'var(--text-3)' }}>Midnight Preprod</span>
           </div>
         </div>
       </div>

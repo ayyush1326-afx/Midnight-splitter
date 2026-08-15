@@ -10,7 +10,7 @@ import {
   Layers,
 } from 'lucide-react';
 import { SplitReceipt } from '../types';
-import { shortenAddress } from '../services/stellar';
+import { shortenAddress } from '../services/midnightContract';
 import { sounds } from '../services/soundEffects';
 
 interface ToolsPageProps {
@@ -168,18 +168,18 @@ export const ToolsPage: React.FC<ToolsPageProps> = ({
             icon={<Code2 style={{ width: '18px', height: '18px', color: 'var(--cyan)' }} />}
             iconBg="var(--cyan-dim)"
             title="Contract Inspector"
-            description="Explore the compiled Soroban Rust smart contract, ABI, and function signatures."
-            actionLabel="Inspect Contract"
+            description="Explore the compiled Compact smart contract, ABI, circuits, and Midnight CLI workflow."
+            actionLabel="Inspect Compact Contract"
             accentColor="var(--cyan)"
-            badge="Rust SDK v27"
+            badge="Compact v0.1.0"
             onClick={() => { sounds.playClick(); onOpenContractInspector(); }}
           />
           <FeatureCard
             icon={<Sparkles style={{ width: '18px', height: '18px', color: 'var(--emerald)' }} />}
             iconBg="var(--emerald-dim)"
-            title="Testnet Faucet"
-            description="Mint 1,000 XLM to your Testnet wallet for development and testing purposes."
-            actionLabel="Get +1,000 XLM"
+            title="Preprod Faucet"
+            description="Mint 1,000 tNIGHT / DUST tokens to your Midnight Preprod wallet for testing."
+            actionLabel="Get +1,000 DUST"
             accentColor="var(--emerald)"
             onClick={() => { sounds.playClick(); onOpenFaucet(); }}
           />

@@ -9,13 +9,14 @@
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:coverage": "vitest run --coverage"
+    "test:coverage": "vitest run --coverage",
+    "contract:build": "compactc --target halo2-ipa contracts/midnight_splitter.compact",
+    "contract:test": "midnight-cli test --config contracts/midnight-cli.json",
+    "contract:deploy": "midnight-cli contract deploy --network preprod --config contracts/midnight-cli.json"
   },
   "dependencies": {
     "@midnight-ntwrk/dapp-connector-api": "^4.0.1",
     "@midnight-ntwrk/midnight-js-network-provider": "file:./src/midnight/midnight-js-network-provider",
-    "@stellar/freighter-api": "^6.0.1",
-    "@stellar/stellar-sdk": "^13.3.0",
     "canvas-confetti": "^1.9.4",
     "clsx": "^2.1.1",
     "lucide-react": "^1.16.0",

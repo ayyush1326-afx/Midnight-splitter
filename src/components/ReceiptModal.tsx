@@ -7,7 +7,7 @@ import {
   Printer
 } from 'lucide-react';
 import { SplitReceipt } from '../types';
-import { shortenAddress } from '../services/stellar';
+import { shortenAddress } from '../services/midnightContract';
 import { sounds } from '../services/soundEffects';
 
 interface ReceiptModalProps {
@@ -88,16 +88,16 @@ Dust Retained by Sender: ${receipt.dust} ${receipt.token.symbol}
 
         {/* Header */}
         <div className="flex items-center gap-3 pr-10">
-          <div className="p-3 rounded-2xl bg-emerald-500/10 text-[#34d399] shrink-0">
+          <div className="p-3 rounded-2xl bg-purple-500/15 text-[#a78bfa] shrink-0">
             <CheckCircle2 className="w-6 h-6" />
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h3 className="text-xl font-bold text-white">Soroban Split Receipt</h3>
-              <span className="badge badge-green text-[10px]">VERIFIED</span>
+              <h3 className="text-xl font-bold text-white">Midnight Compact Receipt</h3>
+              <span className="badge badge-purple text-[10px]">VERIFIED ZK</span>
             </div>
             <p className="text-xs text-slate-400 mt-0.5">
-              Atomic Ledger Settlement • Zero Escrow Loss
+              Atomic Compact Circuit Settlement • Zero Escrow Loss
             </p>
           </div>
         </div>
@@ -109,7 +109,7 @@ Dust Retained by Sender: ${receipt.dust} ${receipt.token.symbol}
               Total Disbursed
             </span>
             <div className="text-2xl font-extrabold font-mono text-white">
-              {receipt.totalAmount.toLocaleString()} <span className="text-sm font-bold text-[#00f2fe]">{receipt.token.symbol}</span>
+              {receipt.totalAmount.toLocaleString()} <span className="text-sm font-bold text-[#a78bfa]">{receipt.token.symbol}</span>
             </div>
           </div>
 
@@ -123,7 +123,7 @@ Dust Retained by Sender: ${receipt.dust} ${receipt.token.symbol}
           </div>
         </div>
 
-        {/* Metadata Matrix - Clean Key/Value Rows */}
+        {/* Metadata Matrix */}
         <div className="flex flex-col gap-2.5 p-4 rounded-xl bg-white/[0.02] border border-white/10 text-xs">
           <div className="flex items-center justify-between">
             <span className="text-slate-400 font-medium">Transaction Hash:</span>
@@ -136,13 +136,13 @@ Dust Retained by Sender: ${receipt.dust} ${receipt.token.symbol}
           </div>
 
           <div className="flex items-center justify-between">
-            <span className="text-slate-400 font-medium">Sender Wallet:</span>
+            <span className="text-slate-400 font-medium">Sender Shielded Address:</span>
             <span className="font-mono text-white font-semibold">{shortenAddress(receipt.sender, 5)}</span>
           </div>
 
           <div className="flex items-center justify-between">
             <span className="text-slate-400 font-medium">Network & Settlement:</span>
-            <span className="font-semibold" style={{ color: receipt.walletProvider === 'lace' ? 'var(--purple)' : '#34d399' }}>
+            <span className="font-semibold" style={{ color: 'var(--purple)' }}>
               {receipt.network}
             </span>
           </div>
@@ -160,7 +160,7 @@ Dust Retained by Sender: ${receipt.dust} ${receipt.token.symbol}
             >
               <div className="flex items-center justify-between">
                 <span className="text-purple-400 font-semibold" style={{ color: 'var(--purple)' }}>
-                  ZK Privacy Proof (Compact):
+                  ZK Solvency Proof (Compact):
                 </span>
                 <span className="font-mono text-emerald-400 font-bold" style={{ color: 'var(--emerald)' }}>
                   VERIFIED (0 Fund Leakage)
@@ -187,14 +187,14 @@ Dust Retained by Sender: ${receipt.dust} ${receipt.token.symbol}
             {receipt.recipients.map((r, i) => (
               <div key={i} className="flex items-center justify-between p-3 rounded-xl bg-white/[0.02] border border-white/5 text-xs">
                 <div className="flex items-center gap-2.5">
-                  <div className="w-6 h-6 rounded-lg bg-[#00f2fe]/10 text-[#00f2fe] flex items-center justify-center font-mono font-bold text-[10px]">
+                  <div className="w-6 h-6 rounded-lg bg-[#a78bfa]/15 text-[#a78bfa] flex items-center justify-center font-mono font-bold text-[10px]">
                     #{i + 1}
                   </div>
                   <span className="font-medium text-white">
                     {r.nickname || shortenAddress(r.address, 4)}
                   </span>
                 </div>
-                <span className="font-mono font-bold text-[#00f2fe]">
+                <span className="font-mono font-bold text-[#a78bfa]">
                   {r.amount.toLocaleString()} {receipt.token.symbol}
                 </span>
               </div>
@@ -230,7 +230,7 @@ Dust Retained by Sender: ${receipt.dust} ${receipt.token.symbol}
               onClose();
             }}
             className="btn-primary flex items-center gap-1.5"
-            style={{ fontSize: '0.85rem', padding: '10px 22px' }}
+            style={{ fontSize: '0.85rem', padding: '10px 22px', background: 'linear-gradient(135deg, var(--purple) 0%, #7c3aed 100%)' }}
           >
             <span>Close Receipt</span>
           </button>
@@ -240,4 +240,3 @@ Dust Retained by Sender: ${receipt.dust} ${receipt.token.symbol}
     </div>
   );
 };
-

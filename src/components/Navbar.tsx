@@ -13,7 +13,7 @@ import {
   History,
   Sparkles,
 } from 'lucide-react';
-import { shortenAddress } from '../services/stellar';
+import { shortenAddress } from '../services/midnightContract';
 import { sounds } from '../services/soundEffects';
 import { WalletProvider } from '../types';
 
@@ -75,7 +75,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           <div
             className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0"
             style={{
-              background: 'linear-gradient(135deg, var(--cyan) 0%, var(--purple) 100%)',
+              background: 'linear-gradient(135deg, var(--purple) 0%, var(--cyan) 100%)',
             }}
           >
             <Coins className="w-4 h-4" style={{ color: '#04080f' }} />
@@ -90,13 +90,13 @@ export const Navbar: React.FC<NavbarProps> = ({
               }}
             >
               MIDNIGHT{' '}
-              <span style={{ color: 'var(--cyan)' }}>SPLITTER</span>
+              <span style={{ color: 'var(--purple)' }}>SPLITTER</span>
             </span>
             <span
               className="section-label"
-              style={{ fontSize: '0.6rem', letterSpacing: '0.08em' }}
+              style={{ fontSize: '0.6rem', letterSpacing: '0.08em', color: 'var(--purple)' }}
             >
-              SOROBAN · STELLAR
+              COMPACT · MIDNIGHT CLI
             </span>
           </div>
         </div>
@@ -114,7 +114,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               style={{
                 width: '15px',
                 height: '15px',
-                color: activePage === 'split' ? 'var(--cyan)' : 'var(--text-3)',
+                color: activePage === 'split' ? 'var(--purple)' : 'var(--text-3)',
               }}
             />
             <span>Split</span>
@@ -131,7 +131,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               style={{
                 width: '15px',
                 height: '15px',
-                color: activePage === 'tools' ? 'var(--cyan)' : 'var(--text-3)',
+                color: activePage === 'tools' ? 'var(--purple)' : 'var(--text-3)',
               }}
             />
             <span>Tools</span>
@@ -143,8 +143,8 @@ export const Navbar: React.FC<NavbarProps> = ({
                   right: '-2px',
                   width: '16px',
                   height: '16px',
-                  background: 'var(--cyan)',
-                  color: '#04080f',
+                  background: 'var(--purple)',
+                  color: '#ffffff',
                   borderRadius: '50%',
                   fontSize: '9px',
                   fontWeight: 800,
@@ -161,27 +161,7 @@ export const Navbar: React.FC<NavbarProps> = ({
 
         {/* ── Right Controls ── */}
         <div className="flex items-center" style={{ gap: '8px' }}>
-          {/* Faucet — desktop only */}
-          <button
-            onClick={() => {
-              sounds.playClick();
-              onOpenFaucet();
-            }}
-            className="lg:inline-flex items-center gap-1.5 btn-ghost"
-            style={{
-              display: 'none',
-              fontSize: '0.78rem',
-              padding: '7px 12px',
-              background: 'var(--gold-dim)',
-              borderColor: 'rgba(245,158,11,0.25)',
-              color: 'var(--gold)',
-            }}
-            title="Testnet Faucet: +1,000 XLM"
-          >
-            <Sparkles style={{ width: '13px', height: '13px' }} />
-            <span>+1,000 XLM</span>
-          </button>
-          {/* Faucet — always visible via CSS on lg */}
+          {/* Faucet button */}
           <button
             onClick={() => {
               sounds.playClick();
@@ -191,14 +171,14 @@ export const Navbar: React.FC<NavbarProps> = ({
             style={{
               fontSize: '0.78rem',
               padding: '7px 12px',
-              background: 'var(--gold-dim)',
-              borderColor: 'rgba(245,158,11,0.25)',
-              color: 'var(--gold)',
+              background: 'var(--purple-dim)',
+              borderColor: 'rgba(139,92,246,0.3)',
+              color: 'var(--purple)',
             }}
-            title="Testnet Faucet: +1,000 XLM"
+            title="Preprod Faucet: +1,000 DUST"
           >
             <Sparkles style={{ width: '13px', height: '13px' }} />
-            <span className="sm:inline" style={{ display: 'none' }}>+1,000 XLM</span>
+            <span className="sm:inline" style={{ display: 'none' }}>+1,000 DUST</span>
           </button>
 
           {/* History badge shortcut */}
@@ -239,7 +219,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             style={{ padding: '8px' }}
           >
             {soundEnabled ? (
-              <Volume2 style={{ width: '15px', height: '15px', color: 'var(--cyan)' }} />
+              <Volume2 style={{ width: '15px', height: '15px', color: 'var(--purple)' }} />
             ) : (
               <VolumeX style={{ width: '15px', height: '15px', color: 'var(--text-3)' }} />
             )}
@@ -281,13 +261,13 @@ export const Navbar: React.FC<NavbarProps> = ({
                   <span
                     style={{
                       fontSize: '0.62rem',
-                      color: walletProvider === 'lace' ? 'var(--purple)' : 'var(--cyan)',
+                      color: 'var(--purple)',
                       fontWeight: 800,
                       textTransform: 'uppercase',
                       letterSpacing: '0.04em',
                     }}
                   >
-                    {walletProvider === 'lace' ? 'Lace (CIP-30)' : 'Freighter'}
+                    Lace (CIP-30)
                   </span>
                 </div>
                 <span
@@ -298,7 +278,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                     fontFamily: 'var(--font-mono)',
                   }}
                 >
-                  {walletBalance} {walletProvider === 'lace' ? 'tDUST' : 'XLM'}
+                  {walletBalance} DUST
                 </span>
               </div>
               <button
@@ -309,8 +289,8 @@ export const Navbar: React.FC<NavbarProps> = ({
                   alignItems: 'center',
                   gap: '7px',
                   padding: '7px 12px',
-                  background: walletProvider === 'lace' ? 'rgba(139, 92, 246, 0.15)' : 'var(--emerald-dim)',
-                  border: `1px solid ${walletProvider === 'lace' ? 'rgba(139, 92, 246, 0.35)' : 'rgba(16,185,129,0.25)'}`,
+                  background: 'rgba(139, 92, 246, 0.15)',
+                  border: '1px solid rgba(139, 92, 246, 0.35)',
                   borderRadius: 'var(--radius-full)',
                   cursor: 'pointer',
                   transition: 'all 0.2s ease',
@@ -329,15 +309,15 @@ export const Navbar: React.FC<NavbarProps> = ({
                 }}
                 onMouseLeave={(e) => {
                   const btn = e.currentTarget;
-                  btn.style.background = walletProvider === 'lace' ? 'rgba(139, 92, 246, 0.15)' : 'var(--emerald-dim)';
-                  btn.style.borderColor = walletProvider === 'lace' ? 'rgba(139, 92, 246, 0.35)' : 'rgba(16,185,129,0.25)';
+                  btn.style.background = 'rgba(139, 92, 246, 0.15)';
+                  btn.style.borderColor = 'rgba(139, 92, 246, 0.35)';
                   const textEl = btn.querySelector('.wallet-addr');
                   if (textEl) {
                     textEl.textContent = shortenAddress(walletAddress, 3);
-                    (textEl as HTMLElement).style.color = walletProvider === 'lace' ? 'var(--purple)' : 'var(--emerald)';
+                    (textEl as HTMLElement).style.color = 'var(--purple)';
                   }
                   const dotEl = btn.querySelector('.wallet-dot');
-                  if (dotEl) (dotEl as HTMLElement).style.background = walletProvider === 'lace' ? 'var(--purple)' : 'var(--emerald)';
+                  if (dotEl) (dotEl as HTMLElement).style.background = 'var(--purple)';
                 }}
               >
                 <span
@@ -346,7 +326,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                     width: '7px',
                     height: '7px',
                     borderRadius: '50%',
-                    background: walletProvider === 'lace' ? 'var(--purple)' : 'var(--emerald)',
+                    background: 'var(--purple)',
                     flexShrink: 0,
                     display: 'block',
                     transition: 'background 0.2s ease',
@@ -358,7 +338,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                     fontSize: '0.75rem',
                     fontWeight: 700,
                     fontFamily: 'var(--font-mono)',
-                    color: walletProvider === 'lace' ? 'var(--purple)' : 'var(--emerald)',
+                    color: 'var(--purple)',
                     transition: 'color 0.2s ease',
                   }}
                 >

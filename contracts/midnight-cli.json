@@ -1,0 +1,24 @@
+{
+  "$schema": "https://midnight.network/schemas/midnight-cli.schema.json",
+  "projectName": "midnight-splitter",
+  "version": "1.0.0",
+  "compiler": {
+    "target": "compactc",
+    "compactVersion": "0.1.0",
+    "entrypoint": "midnight_splitter.compact",
+    "outputDir": "./dist/contracts",
+    "zkProofTarget": "halo2-ipa",
+    "optimizationLevel": "O2"
+  },
+  "network": {
+    "name": "midnight-preprod",
+    "indexerUrl": "https://indexer.preprod.midnight.network/api/v1/graphql",
+    "nodeRpcUrl": "https://rpc.preprod.midnight.network",
+    "provingServiceUrl": "https://prover.preprod.midnight.network"
+  },
+  "cli": {
+    "defaultContract": "MidnightSplitter",
+    "gasLimit": "10000000",
+    "autoProve": true
+  }
+}

@@ -24,7 +24,7 @@ export const Footer: React.FC = () => {
         {/* Brand */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '7px' }}>
-            <Coins style={{ width: '14px', height: '14px', color: 'var(--cyan)' }} />
+            <Coins style={{ width: '14px', height: '14px', color: 'var(--purple)' }} />
             <span
               style={{
                 fontFamily: 'var(--font-display)',
@@ -50,12 +50,12 @@ export const Footer: React.FC = () => {
                 flexShrink: 0,
               }}
             />
-            <span style={{ fontSize: '0.75rem', color: 'var(--text-3)' }}>Stellar Testnet Live</span>
+            <span style={{ fontSize: '0.75rem', color: 'var(--text-3)' }}>Midnight Preprod Live</span>
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
             <Zap style={{ width: '12px', height: '12px', color: 'var(--purple)' }} />
-            <span style={{ fontSize: '0.72rem', color: 'var(--text-3)' }}>Soroban Rust SDK v27</span>
+            <span style={{ fontSize: '0.72rem', color: 'var(--text-3)' }}>Compact DSL v0.1.0 · Midnight CLI</span>
           </div>
 
           <span
@@ -73,15 +73,15 @@ export const Footer: React.FC = () => {
             }}
           >
             <ShieldCheck style={{ width: '10px', height: '10px' }} />
-            Zero Escrow Risk
+            Zero Escrow Risk · ZK Privacy
           </span>
         </div>
 
         {/* Links */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
           {[
-            { href: 'https://stellar.org/soroban', label: 'Soroban Docs', Icon: Globe },
-            { href: 'https://laboratory.stellar.org', label: 'Stellar Lab', Icon: ExternalLink },
+            { href: 'https://docs.midnight.network', label: 'Midnight Docs', Icon: Globe },
+            { href: 'https://midnight.network', label: 'Midnight Portal', Icon: ExternalLink },
             { href: 'https://github.com', label: 'GitHub', Icon: GitBranch },
           ].map(({ href, label, Icon }) => (
             <a

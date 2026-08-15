@@ -1,7 +1,7 @@
 import React from 'react';
 import { X, History, ExternalLink, Receipt, CheckCircle2, ArrowRight } from 'lucide-react';
 import { SplitReceipt } from '../types';
-import { shortenAddress } from '../services/stellar';
+import { shortenAddress } from '../services/midnightContract';
 import { sounds } from '../services/soundEffects';
 
 interface HistoryDrawerProps {
@@ -28,7 +28,7 @@ export const HistoryDrawer: React.FC<HistoryDrawerProps> = ({
         {/* Header */}
         <div className="flex items-center justify-between pb-2" style={{ borderBottom: '1px solid var(--border-soft)' }}>
           <div className="flex items-center gap-2.5">
-            <div className="p-2 rounded-xl bg-[rgba(245,158,11,0.15)] text-[#fbbf24]">
+            <div className="p-2 rounded-xl bg-[rgba(139,92,246,0.15)] text-[#a78bfa]">
               <History className="w-5 h-5" />
             </div>
             <div>
@@ -36,7 +36,7 @@ export const HistoryDrawer: React.FC<HistoryDrawerProps> = ({
                 Transaction History
               </h3>
               <p style={{ fontSize: '0.75rem', color: 'var(--text-3)' }}>
-                {history.length} splits executed on Stellar
+                {history.length} splits executed on Midnight
               </p>
             </div>
           </div>
@@ -96,7 +96,7 @@ export const HistoryDrawer: React.FC<HistoryDrawerProps> = ({
                       onViewReceipt(item);
                     }}
                     className="flex items-center gap-1"
-                    style={{ color: 'var(--cyan)', fontWeight: 600, fontSize: '0.72rem', background: 'none', border: 'none', cursor: 'pointer' }}
+                    style={{ color: 'var(--purple)', fontWeight: 600, fontSize: '0.72rem', background: 'none', border: 'none', cursor: 'pointer' }}
                   >
                     <Receipt className="w-3.5 h-3.5" />
                     <span>View Receipt</span>

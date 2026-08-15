@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { X, Users, Plus, Trash2, ArrowRight, Bookmark, Check, Shield } from 'lucide-react';
 import { SavedGroup, Recipient } from '../types';
-import { PRESET_GROUPS, shortenAddress } from '../services/stellar';
+import { PRESET_GROUPS, shortenAddress } from '../services/midnightContract';
 import { sounds } from '../services/soundEffects';
 
 interface GroupsModalProps {
@@ -126,7 +126,7 @@ export const GroupsModal: React.FC<GroupsModalProps> = ({
             disabled={!newGroupName.trim() || currentRecipients.filter(r => r.isValidAddress).length === 0}
             className="btn-secondary text-xs py-2 px-4 whitespace-nowrap disabled:opacity-40"
           >
-            <Bookmark className="w-3.5 h-3.5 text-[#00f2fe]" />
+            <Bookmark className="w-3.5 h-3.5 text-[#a78bfa]" />
             <span>Save Current ({currentRecipients.filter(r => r.isValidAddress).length})</span>
           </button>
         </div>
@@ -186,6 +186,7 @@ export const GroupsModal: React.FC<GroupsModalProps> = ({
                     onClose();
                   }}
                   className="btn-primary text-xs py-2 px-4"
+                  style={{ background: 'linear-gradient(135deg, var(--purple) 0%, #7c3aed 100%)' }}
                 >
                   <span>Load Group</span>
                   <ArrowRight className="w-3.5 h-3.5" />

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { X, Upload, CheckCircle2, AlertCircle, FileText, Sparkles } from 'lucide-react';
-import { isValidStellarAddress } from '../services/stellar';
+import { isValidMultiChainAddress } from '../services/midnightContract';
 import { sounds } from '../services/soundEffects';
 
 interface BulkImportModalProps {
@@ -23,7 +23,6 @@ export const BulkImportModal: React.FC<BulkImportModalProps> = ({
     setText(input);
     const lines = input.split(/[\r\n,;]+/).map(s => s.trim()).filter(Boolean);
     const parsed = lines.map((line, idx) => {
-      // Check if it's formatted as "address:nickname" or CSV
       const parts = line.split(/[|\t,]/).map(p => p.trim());
       const addr = parts[0];
       const nick = parts[1] || `Recipient #${idx + 1}`;
@@ -32,7 +31,7 @@ export const BulkImportModal: React.FC<BulkImportModalProps> = ({
         address: addr,
         nickname: nick,
         percentage: pct,
-        valid: isValidStellarAddress(addr),
+        valid: isValidMultiChainAddress(addr),
       };
     });
     setParsedItems(parsed);
@@ -40,10 +39,10 @@ export const BulkImportModal: React.FC<BulkImportModalProps> = ({
 
   const handleSample = () => {
     sounds.playClick();
-    const sample = `GAT6E47IWY7ZPWZVRFLTXQ26W7G3E5R6WQX5E3L2A56QWE7R8TY90123, Alex Developer
-GBY7F58JXZ8AQXAWSGMUYR37X8H4F6S7XRY6F4M3B67RXF8S9UZ01234, Maya Designer
-GCZ8G69KYA9BRYBXTHNVZS48Y9I5G7T8YSZ7G5N4C78SYG9T0VA12345, Liam Auditor
-GDA9H70LZB0CSZCYUIOWAT59Z0J6H8U9ZTA8H6O5D89TZH0U1WB23456, Zoe PM`;
+    const sample = `mn_test1q639a7g28h9x101y202z303a404b505c606d707e808f909g, Alex Developer
+mn_test1q740b8h39i0y202z303a404b505c606d707e808f909g010h, Maya Designer
+mn_test1q851c9i40j1z303a404b505c606d707e808f909g010h121i, Liam Auditor
+mn_test1q962d0j51k2a404b505c606d707e808f909g010h121i232j, Zoe PM`;
     handleParse(sample);
   };
 
@@ -69,7 +68,7 @@ GDA9H70LZB0CSZCYUIOWAT59Z0J6H8U9ZTA8H6O5D89TZH0U1WB23456, Zoe PM`;
         {/* Header */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="p-2.5 rounded-xl bg-[rgba(0,242,254,0.12)] text-[#00f2fe]">
+            <div className="p-2.5 rounded-xl bg-[rgba(139,92,246,0.15)] text-[#a78bfa]">
               <Upload className="w-5 h-5" />
             </div>
             <div>
@@ -77,7 +76,7 @@ GDA9H70LZB0CSZCYUIOWAT59Z0J6H8U9ZTA8H6O5D89TZH0U1WB23456, Zoe PM`;
                 Bulk Address Importer
               </h3>
               <p style={{ fontSize: '0.78rem', color: 'var(--text-3)', marginTop: '2px' }}>
-                Paste lines of Stellar Public Keys (G...) or CSV (Address, Nickname)
+                Paste lines of Midnight Shielded Addresses (mn_test...) or CSV (Address, Nickname)
               </p>
             </div>
           </div>
@@ -100,7 +99,7 @@ GDA9H70LZB0CSZCYUIOWAT59Z0J6H8U9ZTA8H6O5D89TZH0U1WB23456, Zoe PM`;
             </label>
             <button
               onClick={handleSample}
-              className="text-xs text-[#00f2fe] hover:underline flex items-center gap-1 font-medium"
+              className="text-xs text-[#a78bfa] hover:underline flex items-center gap-1 font-medium"
             >
               <Sparkles className="w-3.5 h-3.5" />
               <span>Load 4 Sample Recipients</span>
@@ -108,7 +107,7 @@ GDA9H70LZB0CSZCYUIOWAT59Z0J6H8U9ZTA8H6O5D89TZH0U1WB23456, Zoe PM`;
           </div>
           <textarea
             rows={7}
-            placeholder="GAT6E47IWY7ZPWZVRFLTXQ26W7G3E5R6WQX5E3L2A56QWE7R8TY90123, Alex&#10;GBY7F58JXZ8AQXAWSGMUYR37X8H4F6S7XRY6F4M3B67RXF8S9UZ01234, Maya"
+            placeholder="mn_test1q639a7g28h9x101y202z303a404b505c606d707e808f909g, Alex&#10;mn_test1q740b8h39i0y202z303a404b505c606d707e808f909g010h, Maya"
             value={text}
             onChange={(e) => handleParse(e.target.value)}
             className="app-input app-input-mono"
@@ -131,7 +130,7 @@ GDA9H70LZB0CSZCYUIOWAT59Z0J6H8U9ZTA8H6O5D89TZH0U1WB23456, Zoe PM`;
               )}
             </div>
             <span className="text-[11px] text-[var(--text-muted)] font-mono">
-              Ready for Soroban batch
+              Ready for Compact batch
             </span>
           </div>
         )}
@@ -151,6 +150,7 @@ GDA9H70LZB0CSZCYUIOWAT59Z0J6H8U9ZTA8H6O5D89TZH0U1WB23456, Zoe PM`;
             onClick={handleConfirm}
             disabled={validCount === 0}
             className="btn-primary text-xs sm:text-sm py-2.5 px-6"
+            style={{ background: 'linear-gradient(135deg, var(--purple) 0%, #7c3aed 100%)' }}
           >
             <Upload className="w-4 h-4" />
             <span>Import {validCount} Recipients</span>

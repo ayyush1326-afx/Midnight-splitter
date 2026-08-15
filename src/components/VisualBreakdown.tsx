@@ -8,7 +8,7 @@ import {
   PieChart,
 } from 'lucide-react';
 import { Recipient, TokenInfo, SplitMode } from '../types';
-import { shortenAddress } from '../services/stellar';
+import { shortenAddress } from '../services/midnightContract';
 
 interface VisualBreakdownProps {
   mode: SplitMode;
@@ -38,10 +38,7 @@ export const VisualBreakdown: React.FC<VisualBreakdownProps> = ({
   const validRecipients = recipients.filter((r) => r.isValidAddress && r.address);
   const count = validRecipients.length;
 
-  const rateToUsd =
-    token.symbol === 'USDC' ? 1.0
-    : token.symbol === 'EURC' ? 1.08
-    : 0.12;
+  const rateToUsd = 1.0;
   const fiatTotal = (effectiveTotal * rateToUsd).toFixed(2);
   const fiatShare = count > 0 ? (perRecipientShare * rateToUsd).toFixed(2) : '0.00';
 
@@ -60,14 +57,14 @@ export const VisualBreakdown: React.FC<VisualBreakdownProps> = ({
                 width: '36px',
                 height: '36px',
                 borderRadius: '10px',
-                background: 'var(--cyan-dim)',
-                border: '1px solid var(--border-cyan)',
+                background: 'var(--purple-dim)',
+                border: '1px solid rgba(139,92,246,0.3)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
               }}
             >
-              <TrendingUp style={{ width: '16px', height: '16px', color: 'var(--cyan)' }} />
+              <TrendingUp style={{ width: '16px', height: '16px', color: 'var(--purple)' }} />
             </div>
             <span style={{ fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--text-3)' }}>
               Total Payout
@@ -90,7 +87,7 @@ export const VisualBreakdown: React.FC<VisualBreakdownProps> = ({
             }}
           >
             <ShieldCheck style={{ width: '11px', height: '11px' }} />
-            Atomic
+            Atomic Compact
           </div>
         </div>
 
@@ -109,7 +106,7 @@ export const VisualBreakdown: React.FC<VisualBreakdownProps> = ({
               >
                 {effectiveTotal.toLocaleString()}
               </span>
-              <span style={{ fontSize: '1.1rem', fontWeight: 800, color: 'var(--cyan)', fontFamily: 'var(--font-mono)' }}>
+              <span style={{ fontSize: '1.1rem', fontWeight: 800, color: 'var(--purple)', fontFamily: 'var(--font-mono)' }}>
                 {token.symbol}
               </span>
             </div>
@@ -132,7 +129,7 @@ export const VisualBreakdown: React.FC<VisualBreakdownProps> = ({
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
         {/* Per-person */}
         <div className="glass-card-sm" style={{ padding: '16px' }}>
-          <div style={{ fontSize: '0.68rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--cyan)', marginBottom: '6px' }}>
+          <div style={{ fontSize: '0.68rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--purple)', marginBottom: '6px' }}>
             {mode === 'equal' ? 'Each Receives' : 'Avg. Share'}
           </div>
           <div style={{ display: 'flex', alignItems: 'baseline', gap: '5px' }}>
@@ -143,7 +140,7 @@ export const VisualBreakdown: React.FC<VisualBreakdownProps> = ({
                   : (totalAmount / count).toFixed(2)
                 : '—'}
             </span>
-            <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--cyan)', fontFamily: 'var(--font-mono)' }}>
+            <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--purple)', fontFamily: 'var(--font-mono)' }}>
               {token.symbol}
             </span>
           </div>
@@ -154,7 +151,7 @@ export const VisualBreakdown: React.FC<VisualBreakdownProps> = ({
 
         {/* Recipients count */}
         <div className="glass-card-sm" style={{ padding: '16px' }}>
-          <div style={{ fontSize: '0.68rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--purple)', marginBottom: '6px', display: 'flex', alignItems: 'center', gap: '5px' }}>
+          <div style={{ fontSize: '0.68rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--cyan)', marginBottom: '6px', display: 'flex', alignItems: 'center', gap: '5px' }}>
             <Users style={{ width: '11px', height: '11px' }} />
             Recipients
           </div>
@@ -165,7 +162,7 @@ export const VisualBreakdown: React.FC<VisualBreakdownProps> = ({
             <span style={{ fontSize: '0.75rem', color: 'var(--text-3)' }}>wallets</span>
           </div>
           <div style={{ fontSize: '0.7rem', color: 'var(--emerald)', fontWeight: 600, marginTop: '3px' }}>
-            1 Tx Execution
+            1 Compact Circuit Tx
           </div>
         </div>
       </div>
@@ -288,10 +285,10 @@ export const VisualBreakdown: React.FC<VisualBreakdownProps> = ({
         <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
           <Zap style={{ width: '12px', height: '12px', color: 'var(--purple)' }} />
           <span style={{ fontSize: '0.72rem', color: 'var(--text-3)' }}>
-            Fee: <strong style={{ color: 'var(--text-2)', fontFamily: 'var(--font-mono)' }}>~0.00005 XLM</strong>
+            Fee: <strong style={{ color: 'var(--text-2)', fontFamily: 'var(--font-mono)' }}>~0.000042 DUST</strong>
           </span>
-          <span style={{ fontSize: '0.68rem', color: 'var(--cyan)', fontFamily: 'var(--font-mono)', fontWeight: 700 }}>
-            Testnet
+          <span style={{ fontSize: '0.68rem', color: 'var(--purple)', fontFamily: 'var(--font-mono)', fontWeight: 700 }}>
+            Preprod
           </span>
         </div>
       </div>

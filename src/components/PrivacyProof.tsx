@@ -52,7 +52,7 @@ export const PrivacyProof: React.FC<PrivacyProofProps> = ({
           splitRequirement: totalAmount,
           recipientCount: 4,
           tokenSymbol,
-          senderAddress: senderAddress || 'GAT6E47IWY7ZPWZVRFLTXQ26W7G3E5R6WQX5E3L2A56QWE7R8TY90123',
+          senderAddress: senderAddress || 'mn_test1q639a7g28h9x101y202z303a404b505c606d707e808f909g',
         },
         (step) => {
           setCurrentStep(step);

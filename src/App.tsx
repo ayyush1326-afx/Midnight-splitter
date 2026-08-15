@@ -12,16 +12,13 @@ import {
 } from './types';
 import {
   SUPPORTED_TOKENS,
-  generateRandomStellarAddress,
   generateRandomMidnightAddress,
-  isValidStellarAddress,
+  isValidMidnightAddress,
   isValidMultiChainAddress,
-  connectFreighter,
   connectLace,
-  checkFreighterAvailable,
   checkLaceAvailable,
   PRESET_GROUPS,
-} from './services/stellar';
+} from './services/midnightContract';
 import { executeZKBalanceCircuit } from './services/zkCircuit';
 import { sounds } from './services/soundEffects';
 
@@ -49,7 +46,6 @@ export const App: React.FC = () => {
   const [isWalletConnected, setIsWalletConnected] = useState<boolean>(false);
   const [isConnecting, setIsConnecting] = useState<boolean>(false);
   const [zkProof, setZkProof] = useState<ZKProofData | null>(null);
-
 
   // ── Split Config ──
   const [mode, setMode] = useState<SplitMode>('equal');
@@ -82,7 +78,7 @@ export const App: React.FC = () => {
   const [recipients, setRecipients] = useState<Recipient[]>([
     {
       id: 'rec-1',
-      address: 'GAT6E47IWY7ZPWZVRFLTXQ26W7G3E5R6WQX5E3L2A56QWE7R8TY90123',
+      address: 'mn_test1q639a7g28h9x101y202z303a404b505c606d707e808f909g',
       nickname: 'Alex (Ramen Master)',
       percentage: 25,
       customAmount: '60',
@@ -91,7 +87,7 @@ export const App: React.FC = () => {
     },
     {
       id: 'rec-2',
-      address: 'GBY7F58JXZ8AQXAWSGMUYR37X8H4F6S7XRY6F4M3B67RXF8S9UZ01234',
+      address: 'mn_test1q740b8h39i0y202z303a404b505c606d707e808f909g010h',
       nickname: 'Maya (Designer)',
       percentage: 25,
       customAmount: '60',
@@ -100,8 +96,8 @@ export const App: React.FC = () => {
     },
     {
       id: 'rec-3',
-      address: 'GCZ8G69KYA9BRYBXTHNVZS48Y9I5G7T8YSZ7G5N4C78SYG9T0VA12345',
-      nickname: 'Liam (Smart Contracts)',
+      address: 'mn_test1q851c9i40j1z303a404b505c606d707e808f909g010h121i',
+      nickname: 'Liam (Compact Contracts)',
       percentage: 25,
       customAmount: '60',
       isValidAddress: true,
@@ -109,7 +105,7 @@ export const App: React.FC = () => {
     },
     {
       id: 'rec-4',
-      address: 'GDA9H70LZB0CSZCYUIOWAT59Z0J6H8U9ZTA8H6O5D89TZH0U1WB23456',
+      address: 'mn_test1q962d0j51k2a404b505c606d707e808f909g010h121i232j',
       nickname: 'Zoe (Frontend Dev)',
       percentage: 25,
       customAmount: '60',
@@ -140,7 +136,7 @@ export const App: React.FC = () => {
             id: `rec-url-${idx}`,
             address: addr,
             nickname: nick || `Recipient #${idx + 1}`,
-            isValidAddress: isValidStellarAddress(addr),
+            isValidAddress: isValidMultiChainAddress(addr),
             avatarSeed: `${idx}`,
           };
         });
@@ -185,51 +181,9 @@ export const App: React.FC = () => {
     setIsConnecting(true);
     sounds.playClick();
 
-    if (preferredProvider === 'lace') {
-      const res = await connectLace();
-      if (res.address) {
-        setWalletAddress(res.address);
-        setWalletProvider('lace');
-        setWalletBalance('4,850.50');
-        setIsWalletConnected(true);
-        sounds.playSuccess();
-        const now = new Date().toLocaleTimeString();
-        setLogs((prev) => [
-          {
-            timestamp: now,
-            type: 'auth',
-            message: `Lace Wallet Connected (CIP-30): ${res.address.slice(0, 16)}… on ${res.network}`,
-          },
-          ...prev,
-        ]);
-        setIsConnecting(false);
-        return;
-      }
-    }
-
-    const hasFreighter = await checkFreighterAvailable();
-    if (hasFreighter) {
-      const res = await connectFreighter();
-      if (res.address) {
-        setWalletAddress(res.address);
-        setWalletProvider('freighter');
-        setWalletBalance('4,850.50');
-        setIsWalletConnected(true);
-        sounds.playSuccess();
-        const now = new Date().toLocaleTimeString();
-        setLogs((prev) => [
-          {
-            timestamp: now,
-            type: 'auth',
-            message: `Freighter Wallet Connected: ${res.address.slice(0, 12)}… on Stellar Testnet`,
-          },
-          ...prev,
-        ]);
-      }
-    } else {
-      // Default: Lace simulated demo wallet on Midnight Preprod
-      const randomKey = generateRandomMidnightAddress();
-      setWalletAddress(randomKey);
+    const res = await connectLace();
+    if (res.address) {
+      setWalletAddress(res.address);
       setWalletProvider('lace');
       setWalletBalance('4,850.50');
       setIsWalletConnected(true);
@@ -239,7 +193,7 @@ export const App: React.FC = () => {
         {
           timestamp: now,
           type: 'auth',
-          message: `Lace Wallet Connected (Midnight Preprod): ${randomKey.slice(0, 16)}…`,
+          message: `Lace Wallet Connected (CIP-30): ${res.address.slice(0, 16)}… on ${res.network}`,
         },
         ...prev,
       ]);
@@ -255,7 +209,6 @@ export const App: React.FC = () => {
     setZkProof(null);
   };
 
-
   const handleOpenFaucet = () => {
     sounds.playTransferStep(3);
     const current = parseFloat(walletBalance.replace(/,/g, '')) || 0;
@@ -263,7 +216,7 @@ export const App: React.FC = () => {
     setWalletBalance(newBal);
     const now = new Date().toLocaleTimeString();
     setLogs((prev) => [
-      { timestamp: now, type: 'info', message: 'Friendbot Faucet: +1,000.00 XLM minted to Testnet wallet' },
+      { timestamp: now, type: 'info', message: 'Midnight Preprod Faucet: +1,000.00 DUST minted to wallet' },
       ...prev,
     ]);
   };
@@ -272,7 +225,7 @@ export const App: React.FC = () => {
     const newId = `rec-${Date.now()}`;
     const newRec: Recipient = {
       id: newId,
-      address: generateRandomStellarAddress(),
+      address: generateRandomMidnightAddress(),
       nickname: `Recipient #${recipients.length + 1}`,
       percentage: 0,
       customAmount: '0',
@@ -292,7 +245,7 @@ export const App: React.FC = () => {
   };
 
   const handleFillRandom = (id: string) => {
-    handleUpdateRecipient(id, { address: generateRandomStellarAddress(), isValidAddress: true });
+    handleUpdateRecipient(id, { address: generateRandomMidnightAddress(), isValidAddress: true });
   };
 
   const handleImportBulk = (
@@ -321,7 +274,7 @@ export const App: React.FC = () => {
         nickname: r.nickname || `Member #${idx + 1}`,
         percentage: r.percentage || Math.floor(100 / group.recipients.length),
         customAmount: r.customAmount || '0',
-        isValidAddress: isValidStellarAddress(r.address),
+        isValidAddress: isValidMultiChainAddress(r.address),
         avatarSeed: `${idx}`,
       }))
     );
@@ -332,12 +285,12 @@ export const App: React.FC = () => {
     sounds.playClick();
     const now = new Date().toLocaleTimeString();
     setLogs([
-      { timestamp: now, type: 'info',     message: 'Invoking Soroban Host: MidnightSplitterContract' },
-      { timestamp: now, type: 'auth',     message: 'Verifying from.require_auth() signature on Testnet' },
-      { timestamp: now, type: 'calc',     message: `Calculating split: ${effectiveTotal} ${selectedToken.symbol} across ${count} wallets` },
-      { timestamp: now, type: 'transfer', message: `Atomic token::Client transfers: ${count} transfers queued in 1 ledger transaction` },
-      { timestamp: now, type: 'event',    message: `Publishing event: (symbol_short!("split_eq"), sender, token)` },
-      { timestamp: now, type: 'success',  message: `Tx Succeeded: 0 dust lost, ledger state committed` },
+      { timestamp: now, type: 'info',     message: 'Invoking Compact Circuit: MidnightSplitter.compact' },
+      { timestamp: now, type: 'auth',     message: 'Verifying ZK Solvency Witness & Pedersen Commitment' },
+      { timestamp: now, type: 'calc',     message: `Calculating shares: ${effectiveTotal} ${selectedToken.symbol} across ${count} recipients` },
+      { timestamp: now, type: 'transfer', message: `Executing transfer_shielded() vector loop inside atomic state context` },
+      { timestamp: now, type: 'event',    message: `Updating ledger state: total_splits_executed & total_volume_settled` },
+      { timestamp: now, type: 'success',  message: `Tx Succeeded: 0 dust lost, ZK privacy proof committed to Preprod` },
     ]);
     setTimeout(() => {
       setIsSimulating(false);
@@ -351,10 +304,9 @@ export const App: React.FC = () => {
     sounds.playClick();
 
     const timestamp = new Date().toLocaleTimeString();
-    const txHash = `TX${Math.random().toString(36).substring(2, 12).toUpperCase()}90123SOROBAN`;
-    const ledger = Math.floor(45000000 + Math.random() * 100000);
+    const txHash = `0x${Array.from(crypto.getRandomValues(new Uint8Array(24))).map(b => b.toString(16).padStart(2,'0')).join('')}`;
+    const ledger = Math.floor(1420000 + Math.random() * 5000);
 
-    // Step 1: Run Zero-Knowledge Solvency Circuit
     let proof: ZKProofData | null = zkProof;
     try {
       proof = await executeZKBalanceCircuit({
@@ -362,7 +314,7 @@ export const App: React.FC = () => {
         splitRequirement: effectiveTotal,
         recipientCount: count,
         tokenSymbol: selectedToken.symbol,
-        senderAddress: walletAddress || 'GAT6E47IWY7ZPWZVRFLTXQ26W7G3E5R6WQX5E3L2A56QWE7R8TY90123',
+        senderAddress: walletAddress || 'mn_test1q639a7g28h9x101y202z303a404b505c606d707e808f909g',
       });
       if (proof) {
         const verifiedProof: ZKProofData = proof;
@@ -371,7 +323,7 @@ export const App: React.FC = () => {
           {
             timestamp,
             type: 'zk',
-            message: `ZK Solvency Proof Generated: ${verifiedProof.proofId.slice(0, 18)}… (balance proven ≥ ${effectiveTotal} ${selectedToken.symbol} with 0 balance leakage)`,
+            message: `ZK Solvency Proof Generated: ${verifiedProof.proofId.slice(0, 18)}… (balance proven ≥ ${effectiveTotal} ${selectedToken.symbol} with 0 leakage)`,
           },
           ...prev,
         ]);
@@ -416,7 +368,7 @@ export const App: React.FC = () => {
               ? Math.floor((effectiveTotal * (r.percentage || 0)) / 100)
               : parseFloat(r.customAmount || '0') || 0,
         })),
-        network: walletProvider === 'lace' ? 'Midnight Preprod (ZK-Protected)' : 'Stellar Testnet (Soroban)',
+        network: 'Midnight Preprod (Compact ZK Protected)',
         blockLedger: ledger,
         zkProof: proof || undefined,
       };
@@ -429,7 +381,7 @@ export const App: React.FC = () => {
         {
           timestamp,
           type: 'success',
-          message: `Atomic Split Executed: ${effectiveTotal} ${selectedToken.symbol} → ${count} recipients in Tx ${txHash.slice(0, 8)}…`,
+          message: `Atomic Compact Split Executed: ${effectiveTotal} ${selectedToken.symbol} → ${count} recipients in Tx ${txHash.slice(0, 10)}…`,
         },
         ...prev,
       ]);
@@ -509,7 +461,7 @@ export const App: React.FC = () => {
                     <span style={{ color: 'var(--purple)' }}>Bill Splitting</span>
                   </h1>
                   <p style={{ fontSize: '0.75rem', color: 'var(--text-3)', marginTop: '1px' }}>
-                    Zero-Knowledge Solvency Proof with Lace (CIP-30) & Soroban atomic settlement
+                    Zero-Knowledge Solvency Proof with Lace (CIP-30) &amp; Compact Contract atomic settlement
                   </p>
                 </div>
               ) : (
@@ -526,7 +478,7 @@ export const App: React.FC = () => {
                     <span style={{ color: 'var(--purple)' }}>Tools</span>
                   </h1>
                   <p style={{ fontSize: '0.75rem', color: 'var(--text-3)', marginTop: '1px' }}>
-                    Simulate, inspect, and verify your ZK privacy circuit & Soroban contracts
+                    Simulate, inspect, and verify your Compact privacy circuit &amp; Midnight contracts
                   </p>
                 </div>
               )}
@@ -536,7 +488,7 @@ export const App: React.FC = () => {
             <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
               {[
                 { label: 'Privacy Mode', value: 'Zero-Knowledge', color: 'var(--purple)' },
-                { label: 'Wallet', value: walletProvider === 'lace' ? 'Lace (CIP-30)' : 'Freighter', color: 'var(--cyan)' },
+                { label: 'Wallet', value: 'Lace (CIP-30)', color: 'var(--cyan)' },
                 { label: 'Solvency Proof', value: zkProof?.verified ? 'Proven (Hidden)' : 'Ready', color: 'var(--emerald)' },
               ].map(({ label, value, color }) => (
                 <div
@@ -582,7 +534,6 @@ export const App: React.FC = () => {
                 gap: '24px',
               }}
             >
-              {/* On large screens: 2-column grid */}
               <style>{`
                 @media (min-width: 1024px) {
                   .split-grid { grid-template-columns: 7fr 5fr !important; }

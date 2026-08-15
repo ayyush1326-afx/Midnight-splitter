@@ -19,7 +19,7 @@ import {
   DollarSign,
 } from 'lucide-react';
 import { Recipient, TokenInfo, SplitMode, ZKProofData } from '../types';
-import { isValidMultiChainAddress, shortenAddress } from '../services/stellar';
+import { isValidMultiChainAddress, shortenAddress } from '../services/midnightContract';
 import { sounds } from '../services/soundEffects';
 
 interface SplitterCardProps {
@@ -135,7 +135,7 @@ export const SplitterCard: React.FC<SplitterCardProps> = ({
               Define recipients and payout amounts
             </p>
           </div>
-          <span className="badge badge-cyan">Stateless · Atomic</span>
+          <span className="badge badge-purple">Compact Circuit · ZK Shielded</span>
         </div>
 
         {/* Mode Tabs */}
@@ -341,7 +341,7 @@ export const SplitterCard: React.FC<SplitterCardProps> = ({
           }}
         >
           <label style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--gold)' }}>
-            Soroban Contract Address (C…)
+            Compact Token Contract Address (0x…)
           </label>
           <input
             type="text"
@@ -779,7 +779,7 @@ export const SplitterCard: React.FC<SplitterCardProps> = ({
             {isExecuting ? (
               <>
                 <Loader2 style={{ width: '18px', height: '18px' }} className="animate-spin" />
-                <span>Executing on Soroban…</span>
+                <span>Executing on Midnight Compact…</span>
               </>
             ) : (
               <>
