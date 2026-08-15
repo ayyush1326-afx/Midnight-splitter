@@ -15,14 +15,12 @@ Midnight Splitter is a production-grade, privacy-preserving dApp built on **Midn
 
 ---
 
-## 🚀 Live Demo & Demo Video Walkthrough
+## 🎥 Application Demo Video & Live Application
 
 - 🌐 **Live Web Application**: [https://midnight-splitter-chi.vercel.app](https://midnight-splitter-chi.vercel.app)
-- 🎥 **1-Minute Interactive Demo Preview**:
+- 🎬 **Application Demo Video Walkthrough**:
 
-![Demo Walkthrough Preview](screenshots/demo-recording.webp)
-
-> *Note: If you have uploaded your own YouTube / Loom video, replace the URL in `README.md` with your video link.*
+![Application Demo Video Walkthrough](screenshots/demo-recording.webp)
 
 ---
 
@@ -108,9 +106,6 @@ Midnight Splitter solves this with **selective disclosure**:
 ### 6. Developer Tools & Test Suite Overview
 ![Developer Tools Page](screenshots/developer-tools-page.png)
 
-### 7. GitHub Actions CI/CD Passing Pipeline Run
-![CI/CD Passing Run](screenshots/ci-passing-run.png)
-
 ---
 
 ## 📜 Compact Smart Contract Code
@@ -193,7 +188,7 @@ The project includes an automated GitHub Actions CI/CD workflow at [`.github/wor
 - **Job 1**: `Frontend & ZK Circuits (Node 20.x)` (runs `npx tsc`, 26 Vitest unit tests, and production build)
 - **Job 2**: `Midnight Compact Contract (.compact)` (validates Compact contract DSL syntax and `midnight-cli.json`)
 
-![CI/CD Badge](https://github.com/ayyush1326-afx/Midnight-splitter/actions/workflows/ci.yml/badge.svg)
+[![CI](https://github.com/ayyush1326-afx/Midnight-splitter/actions/workflows/ci.yml/badge.svg)](https://github.com/ayyush1326-afx/Midnight-splitter/actions/workflows/ci.yml)
 
 ---
 
