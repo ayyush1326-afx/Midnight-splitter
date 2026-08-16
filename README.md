@@ -1,58 +1,56 @@
 # 🌙 Midnight Splitter
 
-**Private Payroll & Atomic Multi-Wallet Bill Splitting with Compact Smart Contracts & Zero-Knowledge Proofs**
-
-Midnight Splitter is a production-grade, privacy-preserving dApp built on **Midnight Network**. It combines **Zero-Knowledge (ZK) solvency circuits** written in **Compact Language (`.compact`)** with **atomic multi-recipient token settlement** compiled and deployed via **Midnight CLI (`midnight-cli`)**. Users connect via **Lace Wallet** (Midnight CAIP-372 / CIP-30), prove sufficient balance to settle a split **without revealing their actual balance on-chain**, and execute multi-wallet splits in a single atomic Compact transaction.
+> **Private Payroll & Atomic Multi-Wallet Bill Splitting on Midnight Network**  
+> Preserving financial privacy using **Zero-Knowledge (ZK) Enclave Solvency Proofs** written in **Compact DSL (`.compact`)** and executed atomically via **Lace Wallet** & **Midnight Preprod**.
 
 [![CI](https://github.com/ayyush1326-afx/Midnight-splitter/actions/workflows/ci.yml/badge.svg)](https://github.com/ayyush1326-afx/Midnight-splitter/actions/workflows/ci.yml)
 [![Live Demo](https://img.shields.io/badge/Live_Demo-Vercel-black?style=flat-square&logo=vercel&logoColor=white)](https://midnight-splitter-chi.vercel.app)
 [![Midnight SDK](https://img.shields.io/badge/Midnight_SDK-dapp--connector--api_v4-7C3AED?style=flat-square&logo=cardano&logoColor=white)](https://midnight.network)
-[![Compact DSL](https://img.shields.io/badge/Compact_DSL-v0.1.0-8B5CF6?style=flat-square)](https://docs.midnight.network)
-[![Midnight CLI](https://img.shields.io/badge/Midnight_CLI-compactc-10B981?style=flat-square)](https://docs.midnight.network)
+[![Compact DSL](https://img.shields.io/badge/Compact_DSL-v0.23-8B5CF6?style=flat-square)](https://docs.midnight.network)
+[![Compact Compiler](https://img.shields.io/badge/Compact_Compiler-compactc_v0.31.1-10B981?style=flat-square)](https://docs.midnight.network)
 [![React](https://img.shields.io/badge/React-18-61DAFB?style=flat-square&logo=react&logoColor=black)](https://react.dev)
-[![Tests](https://img.shields.io/badge/Tests-26_passing-10b981?style=flat-square&logo=vitest&logoColor=white)](#tests)
+[![Tests](https://img.shields.io/badge/Tests-26_passing-10b981?style=flat-square&logo=vitest&logoColor=white)](#-tests)
 [![License](https://img.shields.io/badge/License-MIT-green?style=flat-square)](LICENSE)
 
 ---
 
-## 🚀 Live Demo Application
+## 🌐 Live Application & Demo
 
-- 🌐 **Live Web Application**: [https://midnight-splitter-chi.vercel.app](https://midnight-splitter-chi.vercel.app)
+* 🚀 **Web Application**: [https://midnight-splitter-chi.vercel.app](https://midnight-splitter-chi.vercel.app)
+* 📜 **Midnight Preprod Explorer**: [https://explorer.preprod.midnight.network](https://explorer.preprod.midnight.network)
+* 🚰 **Official Testnet Faucet**: [https://midnight-tmnight-preprod.nethermind.dev](https://midnight-tmnight-preprod.nethermind.dev)
 
 ---
 
 ## 📋 Table of Contents
 
-- [Product Proposal](#-product-proposal-private-payroll--splits)
+- [Overview & Problem Statement](#-overview--problem-statement)
 - [Privacy Model](#-privacy-model)
-- [Deployed Compact Smart Contract](#-deployed-compact-smart-contract)
-- [Screenshots & Application Previews](#-screenshots--application-previews)
-- [Compact Smart Contract Code](#-compact-smart-contract-code)
-- [Midnight CLI Toolchain](#-midnight-cli-toolchain)
+- [System Architecture](#-system-architecture)
+- [Smart Contract Specification](#-smart-contract-specification)
+- [Project Structure](#-project-structure)
+- [Midnight Toolchain & Deployment](#-midnight-toolchain--deployment)
 - [Lace Wallet Integration](#-lace-wallet-integration)
-- [CI/CD Pipeline](#-cicd-pipeline)
-- [Tests](#tests)
-- [Tech Stack](#tech-stack)
-- [Getting Started](#getting-started)
+- [Application Screenshots](#-application-screenshots)
+- [Tests & Verification](#-tests--verification)
+- [Getting Started](#-getting-started)
 
 ---
 
-## 💡 Product Proposal: Private Payroll / Splits
-
-**Idea Chosen**: *Private Payroll / Splits — distribute funds without exposing amounts*
+## 💡 Overview & Problem Statement
 
 ### The Problem
-When splitting bills, distributing payroll, or sharing grant payments on transparent blockchains, observers can see sender balances, recipient amounts, and payment history.
+When distributing payroll, splitting group bills, or dispersing grant payouts on traditional public blockchains, every participant's account balance, transaction history, and exact asset positions are publicly exposed on-chain.
 
 ### The Solution — Midnight Splitter
-Midnight Splitter solves this with **selective disclosure**:
+Midnight Splitter enables **selective disclosure**: senders prove they hold sufficient shielded funds to cover a multi-wallet split **without revealing their actual balance, blinding factors, or remaining wallet balance to the public ledger**.
 
-| What the sender chooses to disclose | What remains private |
-|---|---|
-| ✅ The ZK solvency proof (balance ≥ requirement) | 🔒 Actual sender balance |
-| ✅ Recipient addresses (on-chain settlement) | 🔒 Blinding factor & witness state |
-| ✅ Total split amount | 🔒 Remaining balance after split |
-| ✅ Token type used (DUST / tNIGHT) | 🔒 Unshielded account history |
+| Dimension | Public Blockchains (Ethereum, Cardano) | Midnight Splitter (Compact DSL) |
+|---|---|---|
+| **Sender Balance** | 🔓 Fully visible on block explorer | 🔒 Private inside ZK Enclave witness |
+| **Solvency Verification** | Requires revealing account balance | ✅ Proved via Zero-Knowledge proof ($B \ge \sum A_i$) |
+| **Multi-Transfer Execution** | Sequential transactions (risk of partial failure) | ✅ Atomic Compact transaction (all-or-nothing) |
+| **Dust Retention** | Fractional dust burned or lost | ✅ Indivisible dust retained in sender wallet |
 
 ---
 
@@ -60,191 +58,183 @@ Midnight Splitter solves this with **selective disclosure**:
 
 > *"Half light, half shadow — exactly as much disclosed as you decide."*
 
-### What an Observer CAN Learn (Public)
-- That a split transaction occurred on Midnight Preprod
-- The total split amount and token type
-- The commitment hash `C = sha256(pack(balance, secret_r))`
-- Proof verification status (`verified: true`)
+```
+       [ Private Witness State ]                 [ Public Ledger State ]
+   ┌───────────────────────────────┐         ┌─────────────────────────────┐
+   │ • Sender Private Balance (B)  │         │ • Total Split Amount (A)    │
+   │ • Blinding Secret (secret_r)  │  ──────>│ • Recipient Count (N)       │
+   │ • Unshielded Account History  │   ZK    │ • ZK Solvency Commitment (C)│
+   │ • Remaining Excess Funds      │  Proof  │ • Nullifier Hash (H)        │
+   └───────────────────────────────┘         └─────────────────────────────┘
+```
 
-### What an Observer CANNOT Learn (Private)
-- Sender's actual account balance
-- Sender's secret blinding factor `secret_r`
-- How much excess balance remains in the wallet after split
+### Selective Disclosure Matrix
 
----
-
-## 📜 Deployed Compact Smart Contract
-
-- **Network**: Midnight Preprod Testnet
-- **Contract Address**: See [`contracts/deployed-address.json`](contracts/deployed-address.json) (populated after deployment)
-- **Compiler Target**: `compactc v0.1.0` (Halo2 IPA proving system)
-- **Indexer Endpoint**: `https://indexer.preprod.midnight.network/api/v1/graphql`
-- **Node RPC Endpoint**: `wss://rpc.preprod.midnight.network/ws`
-- **Explorer**: [`explorer.preprod.midnight.network`](https://explorer.preprod.midnight.network)
-- **Deployment Guide**: [`DEPLOY.md`](DEPLOY.md)
+| Data Field | Visibility | Description |
+|---|---|---|
+| **Solvency Proof ($B \ge A$)** | Public | Proves balance covers total split amount |
+| **Commitment Hash ($C$)** | Public | $C = \text{persistentHash}(secret\_r)$ |
+| **Nullifier Hash ($H$)** | Public | Prevents proof double-spending |
+| **Total Split Volume ($A$)** | Public | Recorded on public ledger counter |
+| **Sender Total Balance ($B$)** | 🔒 Private | Computed off-chain inside ZK circuit witness |
+| **Blinding Factor ($secret\_r$)** | 🔒 Private | Remains inside local browser enclave |
 
 ---
 
-## 📸 Screenshots & Application Previews
+## 🏗️ System Architecture
 
-### 1. Main Landing & Configurator
-![Application Landing](screenshots/demo-landing.png)
-
-### 2. Lace Wallet Connection & Shielded Balance
-![Wallet Connection](screenshots/wallet-connected.png)
-
-### 3. Zero-Knowledge Solvency Proof Verification
-![ZK Solvency Proof Verification](screenshots/zk-proof-complete.png)
-
-### 4. Weighted % Basis-Point Split Mode
-![Weighted Split Mode](screenshots/split-mode-weighted.png)
-
-### 5. Verified Compact Split Receipt Modal
-![Split Receipt Modal](screenshots/split-receipt-modal.png)
-
-### 6. Developer Tools & Test Suite Overview
-![Developer Tools Page](screenshots/developer-tools-page.png)
-
-### 7. GitHub Actions CI/CD Passing Pipeline Run
-![CI/CD Passing Run](screenshots/ci-passing-run.png)
-
----
-
-## 📜 Compact Smart Contract Code
-
-The smart contract is written in **Compact DSL** located at [`contracts/midnight_splitter.compact`](file:///c:/Users/Dell/midnight%20splitter/contracts/midnight_splitter.compact):
-
-```compact
-pragma compact 0.1.0;
-
-import CompactStandardLibrary;
-
-export struct SplitSummary {
-  total_amount: Uint,
-  total_transferred: Uint,
-  per_recipient_share: Uint,
-  dust: Uint,
-  recipient_count: Uint,
-  execution_timestamp: Uint
-}
-
-export ledger total_splits_executed: Counter;
-export ledger total_volume_settled: Counter;
-
-witness private_balance(): Uint;
-witness blinding_factor(): Bytes<32>;
-
-export circuit verify_solvency_proof(
-  commitment: Bytes<32>,
-  required_amount: Uint
-): SolvencyProof {
-  let balance: Uint = private_balance();
-  assert balance >= required_amount "SolvencyProofFailed: Insufficient private balance";
-  let secret_r: Bytes<32> = blinding_factor();
-  let computed_commitment: Bytes<32> = sha256(pack(balance, secret_r));
-  assert computed_commitment == commitment "SolvencyProofFailed: Invalid commitment witness";
-  ...
-}
-
-export circuit split_equal(
-  recipients: Vector<Address>,
-  total_amount: Uint,
-  solvency_commitment: Bytes<32>
-): SplitSummary {
-  ...
-}
+```mermaid
+flowchart TD
+    A[Lace Wallet / DApp Connector] -->|1. Select Token & Recipients| B[Midnight Splitter Frontend]
+    B -->|2. Compute Off-Chain Shares & Dust| C[ZK Solvency Prover Enclave]
+    C -->|3. Generate Balance Solvency Witness| D[Compact Circuit: verify_solvency_proof]
+    D -->|4. Generate ZK Proof & Commitment| E[Compact Circuit: execute_split]
+    E -->|5. Submit Atomic Transaction| F[Midnight Preprod Node RPC]
+    F -->|6. Record Public Counters| G[Midnight Preprod Indexer / Explorer]
 ```
 
 ---
 
-## 🛠️ Midnight CLI Toolchain
+## 📜 Smart Contract Specification
 
-Commands to build, test, and deploy using the **Compact CLI**:
+The smart contract is written in **Compact DSL** (`language_version >= 0.23;`) located at [`contracts/midnight_splitter.compact`](contracts/midnight_splitter.compact):
+
+### Public Ledger State
+```compact
+export ledger contract_version: Uint<64>;
+export ledger total_splits_executed: Counter;
+export ledger total_volume_settled: Counter;
+export ledger contract_admin: Bytes<32>;
+```
+
+### Circuit Interfaces
+
+| Circuit Name | Type | Arguments | Return Type | Description |
+|---|---|---|---|---|
+| `initialize` | Circuit | `admin: Bytes<32>` | `[]` | Sets contract version & admin |
+| `verify_solvency_proof` | ZK Circuit | `commitment: Bytes<32>, required_amount: Uint<64>` | `SolvencyProof` | Proves balance $\ge$ requirement |
+| `execute_split` | ZK Circuit | `recipient_count, total_amount, total_transferred, dust, solvency_commitment` | `SplitSummary` | Validates $T + D = A$, verifies ZK proof, increments counters |
+
+---
+
+## 📁 Project Structure
+
+```text
+midnight-splitter/
+├── .github/workflows/      # Automated CI/CD workflow (Node 20.x + Compact validation)
+├── contracts/
+│   ├── midnight_splitter.compact   # Compact DSL smart contract (v0.23 syntax)
+│   ├── midnight-cli.json           # Midnight CLI network & compiler config
+│   └── deployed-address.json       # Record of deployed contract address
+├── scripts/
+│   ├── deploy-preprod.mjs          # Automated Midnight Preprod deployment script
+│   └── verify-deployment.mjs       # Midnight Preprod indexer verification script
+├── src/
+│   ├── components/                 # React UI components (Splitter, ZK Proof, DeployModal, etc.)
+│   ├── midnight/                   # Midnight JS network provider shim
+│   ├── services/
+│   │   ├── midnightContract.ts     # Compact circuit invocation & Lace Wallet connector
+│   │   └── zkCircuit.ts            # Off-chain ZK witness generator
+│   └── types/                      # TypeScript definitions
+├── DEPLOY.md                       # Comprehensive deployment & WSL2 guide
+├── package.json                    # Npm scripts for build, test, compile, deploy, verify
+├── README.md                       # Documentation
+└── vite.config.ts                  # Vite build configuration
+```
+
+---
+
+## 🛠️ Midnight Toolchain & Deployment
+
+### Commands
 
 ```bash
-# Compile Compact contract to ZK proving keys & TS bindings (requires compact CLI in WSL2)
+# 1. Compile Compact contract to ZK proving keys & TS bindings (requires WSL2 compact CLI)
 npm run contract:compile
 
-# Deploy Compact smart contract to Midnight Preprod
+# 2. Deploy Compact smart contract to Midnight Preprod Testnet
 npm run contract:deploy
 
-# Dry-run deployment (validates config & endpoints without submitting a tx)
+# 3. Dry-run deployment (validates endpoints without submitting a tx)
 npm run contract:deploy:dry
 
-# Verify deployment on-chain via Preprod indexer GraphQL
+# 4. Verify deployment on-chain via Midnight Preprod Indexer GraphQL
 npm run contract:verify
 ```
 
-Configuration is defined in [`contracts/midnight-cli.json`](contracts/midnight-cli.json).
+### Deployment Configuration
+Configuration is defined in [`contracts/midnight-cli.json`](contracts/midnight-cli.json):
+* **Target Network**: `midnight-preprod`
+* **Node RPC**: `wss://rpc.preprod.midnight.network/ws`
+* **Indexer GraphQL**: `https://indexer.preprod.midnight.network/api/v1/graphql`
+* **Proof Server**: `https://prover.preprod.midnight.network`
 
-See [`DEPLOY.md`](DEPLOY.md) for the complete step-by-step deployment guide, including:
-- WSL2 + Compact CLI setup
-- Wallet funding via Midnight faucet
-- Optional local Docker proof server
-- Manual deployment fallback
-
----
-
-## 🌐 Lace Wallet Integration & In-App Deployment
-
-Supports injected **Lace Wallet** using `@midnight-ntwrk/dapp-connector-api`:
-- **API Spec**: CAIP-372 / CIP-30 DApp Connector
-- **Method**: `walletApi.connect('preprod')` → `getShieldedAddresses()`
-- **In-App Contract Deployment**: Deploy the compiled `MidnightSplitter` Compact smart contract directly from the web application UI using your connected Lace Wallet (Developer Tools → *Deploy via Lace Wallet*).
+For full setup instructions (WSL2, Compact compiler installation, wallet funding), see [`DEPLOY.md`](DEPLOY.md).
 
 ---
 
-## 🔄 CI/CD Pipeline
+## 🌐 Lace Wallet Integration
 
-The project includes an automated GitHub Actions CI/CD workflow at [`.github/workflows/ci.yml`](file:///c:/Users/Dell/midnight%20splitter/.github/workflows/ci.yml):
-- **Job 1**: `Frontend & ZK Circuits (Node 20.x)` (runs `npx tsc`, 26 Vitest unit tests, and production build)
-- **Job 2**: `Midnight Compact Contract (.compact)` (validates Compact contract DSL syntax and `midnight-cli.json`)
-
-[![CI](https://github.com/ayyush1326-afx/Midnight-splitter/actions/workflows/ci.yml/badge.svg)](https://github.com/ayyush1326-afx/Midnight-splitter/actions/workflows/ci.yml)
+Supports injected **Lace Wallet** via `@midnight-ntwrk/dapp-connector-api`:
+- **Protocol**: CIP-30 / CAIP-372 DApp Connector
+- **Method**: `walletApi.connect('preprod')` $\rightarrow$ `getShieldedAddresses()`
+- **In-App Deployment**: Deploy the compiled `MidnightSplitter` Compact contract directly from the browser UI using connected Lace Wallet (Developer Tools $\rightarrow$ *Deploy via Lace Wallet*).
 
 ---
 
-## 🧪 Tests
+## 📸 Application Screenshots
 
-Run test suite via Vitest:
+| Landing & Configurator | Lace Wallet & Shielded Balance |
+|---|---|
+| ![Landing Page](screenshots/demo-landing.png) | ![Wallet Connected](screenshots/wallet-connected.png) |
+
+| Zero-Knowledge Solvency Proof | Verified Compact Split Receipt |
+|---|---|
+| ![ZK Solvency Proof](screenshots/zk-proof-complete.png) | ![Split Receipt](screenshots/split-receipt-modal.png) |
+
+---
+
+## 🧪 Tests & Verification
+
+Run the Vitest test suite:
 
 ```bash
 npm test
 ```
 
-Results:
+### Test Results
+```text
+ ✓ src/__tests__/midnightContract.test.ts (14 tests)
+ ✓ src/__tests__/zkCircuit.test.ts (12 tests)
+
+ Test Files  2 passed (2)
+      Tests  26 passed (26)
 ```
-✓ src/__tests__/midnightContract.test.ts (14 tests)
-✓ src/__tests__/zkCircuit.test.ts (12 tests)
-Test Files  2 passed (2)
-     Tests  26 passed (26)
-```
-
----
-
-## 💻 Tech Stack
-
-- **Smart Contracts**: Compact Language (`.compact`)
-- **CLI / Compiler**: Midnight CLI (`midnight-cli`) & `compactc`
-- **Frontend**: React 18, Vite, TypeScript, Vanilla CSS Glassmorphism
-- **Wallet**: Lace Wallet (CIP-30 / CAIP-372)
-- **CI/CD**: GitHub Actions
-- **Testing**: Vitest, JSDOM
 
 ---
 
 ## 🚀 Getting Started
 
 ```bash
-# Install dependencies
+# 1. Clone repository
+git clone https://github.com/ayyush1326-afx/Midnight-splitter.git
+cd Midnight-splitter
+
+# 2. Install dependencies
 npm install
 
-# Start local dev server
+# 3. Start local development server
 npm run dev
 
-# Run Vitest suite
+# 4. Execute test suite
 npm test
 
-# Build production bundle
+# 5. Build production bundle
 npm run build
 ```
+
+---
+
+## 📄 License
+
+Distributed under the **MIT License**. See `LICENSE` for more information.
