@@ -76,10 +76,12 @@ Midnight Splitter solves this with **selective disclosure**:
 ## 📜 Deployed Compact Smart Contract
 
 - **Network**: Midnight Preprod Testnet
-- **Contract Address ID**: `0x90123456789abcdef0123456789abcdef0123456789abcdef0123456789abc`
+- **Contract Address**: See [`contracts/deployed-address.json`](contracts/deployed-address.json) (populated after deployment)
 - **Compiler Target**: `compactc v0.1.0` (Halo2 IPA proving system)
 - **Indexer Endpoint**: `https://indexer.preprod.midnight.network/api/v1/graphql`
-- **Node RPC Endpoint**: `https://rpc.preprod.midnight.network`
+- **Node RPC Endpoint**: `wss://rpc.preprod.midnight.network/ws`
+- **Explorer**: [`explorer.preprod.midnight.network`](https://explorer.preprod.midnight.network)
+- **Deployment Guide**: [`DEPLOY.md`](DEPLOY.md)
 
 ---
 
@@ -157,28 +159,38 @@ export circuit split_equal(
 
 ## 🛠️ Midnight CLI Toolchain
 
-Commands to build, test, and deploy using **Midnight CLI**:
+Commands to build, test, and deploy using the **Compact CLI**:
 
 ```bash
-# Compile Compact contract to ZK proving keys & TS bindings
-npm run contract:build
-
-# Execute Compact circuit unit tests
-npm run contract:test
+# Compile Compact contract to ZK proving keys & TS bindings (requires compact CLI in WSL2)
+npm run contract:compile
 
 # Deploy Compact smart contract to Midnight Preprod
 npm run contract:deploy
+
+# Dry-run deployment (validates config & endpoints without submitting a tx)
+npm run contract:deploy:dry
+
+# Verify deployment on-chain via Preprod indexer GraphQL
+npm run contract:verify
 ```
 
-Configuration is defined in [`contracts/midnight-cli.json`](file:///c:/Users/Dell/midnight%20splitter/contracts/midnight-cli.json).
+Configuration is defined in [`contracts/midnight-cli.json`](contracts/midnight-cli.json).
+
+See [`DEPLOY.md`](DEPLOY.md) for the complete step-by-step deployment guide, including:
+- WSL2 + Compact CLI setup
+- Wallet funding via Midnight faucet
+- Optional local Docker proof server
+- Manual deployment fallback
 
 ---
 
-## 🌐 Lace Wallet Integration
+## 🌐 Lace Wallet Integration & In-App Deployment
 
 Supports injected **Lace Wallet** using `@midnight-ntwrk/dapp-connector-api`:
 - **API Spec**: CAIP-372 / CIP-30 DApp Connector
-- **Method**: `walletApi.connect('preprod')` -> `getShieldedAddresses()`
+- **Method**: `walletApi.connect('preprod')` → `getShieldedAddresses()`
+- **In-App Contract Deployment**: Deploy the compiled `MidnightSplitter` Compact smart contract directly from the web application UI using your connected Lace Wallet (Developer Tools → *Deploy via Lace Wallet*).
 
 ---
 

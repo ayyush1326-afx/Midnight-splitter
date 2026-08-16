@@ -8,6 +8,7 @@ import {
   ChevronRight,
   Clock,
   Layers,
+  Rocket,
 } from 'lucide-react';
 import { SplitReceipt } from '../types';
 import { shortenAddress } from '../services/midnightContract';
@@ -22,6 +23,8 @@ interface ToolsPageProps {
   onOpenGroups: () => void;
   // Contract Inspector
   onOpenContractInspector: () => void;
+  // Deploy Modal
+  onOpenDeploy: () => void;
   // Faucet
   onOpenFaucet: () => void;
   walletBalance: string;
@@ -122,6 +125,7 @@ export const ToolsPage: React.FC<ToolsPageProps> = ({
   onViewReceipt,
   onOpenGroups,
   onOpenContractInspector,
+  onOpenDeploy,
   onOpenFaucet,
   walletBalance,
 }) => {
@@ -145,6 +149,16 @@ export const ToolsPage: React.FC<ToolsPageProps> = ({
         </div>
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(230px, 1fr))', gap: '14px' }}>
+          <FeatureCard
+            icon={<Rocket style={{ width: '18px', height: '18px', color: 'var(--emerald)' }} />}
+            iconBg="var(--emerald-dim)"
+            title="Deploy via Lace Wallet"
+            description="Deploy the Compact smart contract to Midnight Preprod directly from your browser using Lace Wallet."
+            actionLabel="Deploy Contract"
+            accentColor="var(--emerald)"
+            badge="Preprod"
+            onClick={() => { sounds.playClick(); onOpenDeploy(); }}
+          />
           <FeatureCard
             icon={<History style={{ width: '18px', height: '18px', color: 'var(--gold)' }} />}
             iconBg="var(--gold-dim)"
@@ -171,7 +185,7 @@ export const ToolsPage: React.FC<ToolsPageProps> = ({
             description="Explore the compiled Compact smart contract, ABI, circuits, and Midnight CLI workflow."
             actionLabel="Inspect Compact Contract"
             accentColor="var(--cyan)"
-            badge="Compact v0.1.0"
+            badge="Compact v0.23"
             onClick={() => { sounds.playClick(); onOpenContractInspector(); }}
           />
           <FeatureCard

@@ -92,7 +92,7 @@ export interface SplitReceipt {
 
 export interface SimulationLog {
   timestamp: string;
-  type: 'info' | 'auth' | 'calc' | 'transfer' | 'event' | 'success' | 'warn' | 'zk';
+  type: 'info' | 'auth' | 'calc' | 'transfer' | 'event' | 'success' | 'warn' | 'zk' | 'deploy';
   message: string;
   detail?: string;
 }

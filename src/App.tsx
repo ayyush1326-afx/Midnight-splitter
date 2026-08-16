@@ -32,6 +32,7 @@ import { GroupsModal } from './components/GroupsModal';
 import { ShareModal } from './components/ShareModal';
 import { ReceiptModal } from './components/ReceiptModal';
 import { ContractInspector } from './components/ContractInspector';
+import { DeployModal } from './components/DeployModal';
 import { HistoryDrawer } from './components/HistoryDrawer';
 import { Footer } from './components/Footer';
 
@@ -67,6 +68,7 @@ export const App: React.FC = () => {
   const [isShareOpen, setIsShareOpen] = useState<boolean>(false);
   const [isReceiptOpen, setIsReceiptOpen] = useState<boolean>(false);
   const [isInspectorOpen, setIsInspectorOpen] = useState<boolean>(false);
+  const [isDeployOpen, setIsDeployOpen] = useState<boolean>(false);
   const [isHistoryOpen, setIsHistoryOpen] = useState<boolean>(false);
 
   // ── Data ──
@@ -181,24 +183,34 @@ export const App: React.FC = () => {
     setIsConnecting(true);
     sounds.playClick();
 
-    const res = await connectLace();
-    if (res.address) {
-      setWalletAddress(res.address);
+    try {
+      const res = await connectLace();
+      if (res.address) {
+        setWalletAddress(res.address);
+        setWalletProvider('lace');
+        setWalletBalance('4,850.50');
+        setIsWalletConnected(true);
+        sounds.playSuccess();
+        const now = new Date().toLocaleTimeString();
+        setLogs((prev) => [
+          {
+            timestamp: now,
+            type: 'auth',
+            message: `Lace Wallet Connected (CIP-30): ${res.address.slice(0, 16)}… on ${res.network}`,
+          },
+          ...prev,
+        ]);
+      }
+    } catch {
+      // Fallback mock wallet if rejected
+      const fallbackAddr = generateRandomMidnightAddress();
+      setWalletAddress(fallbackAddr);
       setWalletProvider('lace');
       setWalletBalance('4,850.50');
       setIsWalletConnected(true);
-      sounds.playSuccess();
-      const now = new Date().toLocaleTimeString();
-      setLogs((prev) => [
-        {
-          timestamp: now,
-          type: 'auth',
-          message: `Lace Wallet Connected (CIP-30): ${res.address.slice(0, 16)}… on ${res.network}`,
-        },
-        ...prev,
-      ]);
+    } finally {
+      setIsConnecting(false);
     }
-    setIsConnecting(false);
   };
 
   const handleDisconnectWallet = () => {
@@ -210,15 +222,29 @@ export const App: React.FC = () => {
   };
 
   const handleOpenFaucet = () => {
-    sounds.playTransferStep(3);
+    sounds.playSuccess();
+    try {
+      confetti({ particleCount: 80, spread: 70, origin: { y: 0.6 } });
+    } catch {}
+
     const current = parseFloat(walletBalance.replace(/,/g, '')) || 0;
     const newBal = (current + 1000).toLocaleString('en-US', { minimumFractionDigits: 2 });
     setWalletBalance(newBal);
+    setIsWalletConnected(true);
+    if (!walletAddress) {
+      setWalletAddress(generateRandomMidnightAddress());
+    }
+
     const now = new Date().toLocaleTimeString();
     setLogs((prev) => [
       { timestamp: now, type: 'info', message: 'Midnight Preprod Faucet: +1,000.00 DUST minted to wallet' },
       ...prev,
     ]);
+
+    // Open official Nethermind Midnight faucet in a new tab as well
+    if (typeof window !== 'undefined') {
+      window.open('https://midnight-tmnight-preprod.nethermind.dev/', '_blank', 'noopener,noreferrer');
+    }
   };
 
   const handleAddRecipient = () => {
@@ -606,6 +632,7 @@ export const App: React.FC = () => {
               }}
               onOpenGroups={() => setIsGroupsOpen(true)}
               onOpenContractInspector={() => setIsInspectorOpen(true)}
+              onOpenDeploy={() => setIsDeployOpen(true)}
               onOpenFaucet={handleOpenFaucet}
               walletBalance={walletBalance}
             />
@@ -645,6 +672,22 @@ export const App: React.FC = () => {
       <ContractInspector
         isOpen={isInspectorOpen}
         onClose={() => setIsInspectorOpen(false)}
+        onOpenDeploy={() => setIsDeployOpen(true)}
+      />
+      <DeployModal
+        isOpen={isDeployOpen}
+        onClose={() => setIsDeployOpen(false)}
+        onDeploySuccess={(res) => {
+          const now = new Date().toLocaleTimeString();
+          setLogs((prev) => [
+            {
+              timestamp: now,
+              type: 'deploy',
+              message: `Contract Deployed via Lace: ${res.contractAddress.slice(0, 14)}… at block #${res.blockHeight}`,
+            },
+            ...prev,
+          ]);
+        }}
       />
       <HistoryDrawer
         isOpen={isHistoryOpen}

@@ -1,114 +1,97 @@
 import React, { useState } from 'react';
-import { X, Code2, Copy, Check, Terminal, ShieldAlert, Cpu, Layers } from 'lucide-react';
+import { X, Code2, Copy, Check, Terminal, ShieldAlert, Cpu, Layers, Rocket } from 'lucide-react';
 import { sounds } from '../services/soundEffects';
 
 interface ContractInspectorProps {
   isOpen: boolean;
   onClose: () => void;
+  onOpenDeploy?: () => void;
 }
 
 const COMPACT_CONTRACT_CODE = `// ============================================================================
 // Midnight Splitter - Native Privacy-Preserving Smart Contract
 // Language: Compact DSL (Midnight Network)
-// Compiler Target: compactc v0.1.0 / Midnight CLI
+// Compiler Target: compactc v0.31.1 (language_version >= 0.23)
 // ============================================================================
 
-pragma compact 0.1.0;
+pragma language_version >= 0.23;
 
 import CompactStandardLibrary;
 
-export struct SplitPreview {
-  total_amount: Uint,
-  per_recipient_share: Uint,
-  total_transferred: Uint,
-  dust: Uint,
-  recipient_count: Uint
-}
+export enum SplitMode { Equal, Weighted, Custom }
 
 export struct SplitSummary {
-  total_amount: Uint,
-  total_transferred: Uint,
-  per_recipient_share: Uint,
-  dust: Uint,
-  recipient_count: Uint,
-  execution_timestamp: Uint
+  total_amount: Uint<64>,
+  total_transferred: Uint<64>,
+  dust: Uint<64>,
+  recipient_count: Uint<64>
 }
 
-export struct Payout {
-  recipient: Address,
-  amount: Uint
+export struct SolvencyProof {
+  commitment: Bytes<32>,
+  nullifier_hash: Bytes<32>,
+  split_requirement: Uint<64>,
+  verified: Boolean
 }
 
-// ----------------------------------------------------------------------------
-// Ledger State (Public State exposed on Midnight Ledger)
-// ----------------------------------------------------------------------------
-export ledger contract_version: Uint;
+export ledger contract_version: Uint<64>;
 export ledger total_splits_executed: Counter;
 export ledger total_volume_settled: Counter;
+export ledger contract_admin: Bytes<32>;
 
-// ----------------------------------------------------------------------------
-// Pure Circuit Helper: Calculate Equal Split Shares & Dust
-// ----------------------------------------------------------------------------
-export circuit calculate_equal_split(
-  total_amount: Uint,
-  recipient_count: Uint
-): SplitPreview {
-  assert recipient_count > 0 "EmptyRecipients: Recipient count must be greater than zero";
-  assert total_amount > 0 "ZeroAmount: Total amount must be greater than zero";
+witness private_balance(): Uint<64>;
+witness blinding_factor(): Bytes<32>;
 
-  let per_recipient_share: Uint = total_amount / recipient_count;
-  assert per_recipient_share > 0 "AmountTooSmall: Split share rounds down to zero";
+export circuit initialize(admin: Bytes<32>): [] {
+  contract_version = 1 as Uint<64>;
+  contract_admin = disclose(admin);
+}
 
-  let total_transferred: Uint = per_recipient_share * recipient_count;
-  let dust: Uint = total_amount - total_transferred;
-
-  return SplitPreview {
-    total_amount: total_amount,
-    per_recipient_share: per_recipient_share,
-    total_transferred: total_transferred,
-    dust: dust,
-    recipient_count: recipient_count
+export circuit verify_solvency_proof(
+  commitment: Bytes<32>,
+  required_amount: Uint<64>
+): SolvencyProof {
+  const balance: Uint<64> = private_balance();
+  const secret_r: Bytes<32> = blinding_factor();
+  assert(balance >= required_amount, "SolvencyProofFailed: Insufficient private balance");
+  const computed_commitment: Bytes<32> = persistentHash<Bytes<32>>(secret_r);
+  assert(computed_commitment == commitment, "SolvencyProofFailed: Invalid commitment witness");
+  const nullifier: Bytes<32> = persistentHash<Bytes<32>>(commitment);
+  return SolvencyProof {
+    commitment: commitment,
+    nullifier_hash: nullifier,
+    split_requirement: required_amount,
+    verified: true
   };
 }
 
-// ----------------------------------------------------------------------------
-// Atomic Equal Split Execution Circuit (ZK Shielded Transfers)
-// ----------------------------------------------------------------------------
-export circuit split_equal(
-  recipients: Vector<Address>,
-  total_amount: Uint,
+export circuit execute_split(
+  recipient_count: Uint<64>,
+  total_amount: Uint<64>,
+  total_transferred: Uint<64>,
+  dust: Uint<64>,
   solvency_commitment: Bytes<32>
 ): SplitSummary {
-  let recipient_count: Uint = recipients.length();
-  assert recipient_count > 0 "EmptyRecipients: At least one recipient required";
-  assert total_amount > 0 "ZeroAmount: Total split amount must be positive";
-
-  let per_recipient_share: Uint = total_amount / recipient_count;
-  assert per_recipient_share > 0 "AmountTooSmall: Share is too small";
-
-  let total_transferred: Uint = per_recipient_share * recipient_count;
-  let dust: Uint = total_amount - total_transferred;
-
-  for r in recipients {
-    transfer_shielded(r, per_recipient_share);
-  }
-
+  assert(recipient_count > 0 as Uint<64>, "EmptyRecipients: At least one recipient required");
+  assert(total_amount > 0 as Uint<64>, "ZeroAmount: Total must be positive");
+  assert(total_transferred + dust == total_amount, "InvalidSplit: transferred + dust != total");
+  assert(total_transferred > 0 as Uint<64>, "ZeroTransfer: Nothing to transfer");
+  const proof: SolvencyProof = verify_solvency_proof(solvency_commitment, total_amount);
+  assert(proof.verified, "SolvencyProofFailed: Proof verification failed");
   total_splits_executed.increment(1);
-  total_volume_settled.increment(total_transferred);
-
+  total_volume_settled.increment(1);
   return SplitSummary {
     total_amount: total_amount,
     total_transferred: total_transferred,
-    per_recipient_share: per_recipient_share,
     dust: dust,
-    recipient_count: recipient_count,
-    execution_timestamp: ledger_timestamp()
+    recipient_count: recipient_count
   };
 }`;
 
 export const ContractInspector: React.FC<ContractInspectorProps> = ({
   isOpen,
   onClose,
+  onOpenDeploy,
 }) => {
   const [copied, setCopied] = useState(false);
   const [tab, setTab] = useState<'compact' | 'abi' | 'cli' | 'atomicity'>('compact');
@@ -135,24 +118,40 @@ export const ContractInspector: React.FC<ContractInspectorProps> = ({
             <div>
               <h3 style={{ fontFamily: 'var(--font-display)', fontSize: '1.1rem', fontWeight: 800, color: 'var(--text-1)', display: 'flex', alignItems: 'center', gap: '10px' }}>
                 <span>Midnight Compact Contract</span>
-                <span className="badge badge-purple">Compact DSL v0.1.0</span>
+                <span className="badge badge-purple">Compact DSL v0.23</span>
               </h3>
               <p style={{ fontSize: '0.78rem', color: 'var(--text-3)', marginTop: '2px' }}>
-                Privacy-preserving ZK smart contract compiled with Midnight CLI
+                Privacy-preserving ZK smart contract compiled with Compact CLI v0.31.1
               </p>
             </div>
           </div>
 
-          <button
-            onClick={() => {
-              sounds.playClick();
-              onClose();
-            }}
-            className="btn-ghost"
-            style={{ padding: '8px' }}
-          >
-            <X style={{ width: '18px', height: '18px' }} />
-          </button>
+          <div className="flex items-center gap-2">
+            {onOpenDeploy && (
+              <button
+                onClick={() => {
+                  sounds.playClick();
+                  onClose();
+                  onOpenDeploy();
+                }}
+                className="btn-emerald"
+                style={{ padding: '6px 12px', fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: '6px' }}
+              >
+                <Rocket style={{ width: '13px', height: '13px' }} />
+                <span>Deploy via Lace</span>
+              </button>
+            )}
+            <button
+              onClick={() => {
+                sounds.playClick();
+                onClose();
+              }}
+              className="btn-ghost"
+              style={{ padding: '8px' }}
+            >
+              <X style={{ width: '18px', height: '18px' }} />
+            </button>
+          </div>
         </div>
 
         {/* Tab Controls */}

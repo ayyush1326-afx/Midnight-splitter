@@ -10,9 +10,11 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
-    "contract:build": "compactc --target halo2-ipa contracts/midnight_splitter.compact",
-    "contract:test": "midnight-cli test --config contracts/midnight-cli.json",
-    "contract:deploy": "midnight-cli contract deploy --network preprod --config contracts/midnight-cli.json"
+    "contract:compile": "wsl -d Ubuntu bash -c \"~/.local/bin/compact compile contracts/midnight_splitter.compact dist/contracts\"",
+    "contract:deploy": "node scripts/deploy-preprod.mjs",
+    "contract:deploy:dry": "node scripts/deploy-preprod.mjs --dry-run",
+    "contract:deploy:force": "node scripts/deploy-preprod.mjs --force",
+    "contract:verify": "node scripts/verify-deployment.mjs"
   },
   "dependencies": {
     "@midnight-ntwrk/dapp-connector-api": "^4.0.1",

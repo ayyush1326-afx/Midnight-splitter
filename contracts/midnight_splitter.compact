@@ -1,116 +1,73 @@
 // ============================================================================
 // Midnight Splitter - Native Privacy-Preserving Smart Contract
 // Language: Compact DSL (Midnight Network)
-// Compiler Target: compactc v0.1.0 / Midnight CLI
+// Compiler: compactc v0.31.1+ (via `compact compile`)
 // ============================================================================
 
-pragma compact 0.1.0;
+pragma language_version >= 0.23;
 
 import CompactStandardLibrary;
 
-export enum SplitterErrorCode {
-  Success = 0,
-  ZeroAmount = 1,
-  EmptyRecipients = 2,
-  AmountTooSmall = 3,
-  MismatchedWeights = 4,
-  InvalidWeightsSum = 5,
-  InvalidPayoutAmount = 6,
-  ZeroWeight = 7,
-  SolvencyProofFailed = 8
-}
+// ── Exported Types ──────────────────────────────────────────────────────────
 
-export struct SplitPreview {
-  total_amount: Uint,
-  per_recipient_share: Uint,
-  total_transferred: Uint,
-  dust: Uint,
-  recipient_count: Uint
+export enum SplitMode {
+  Equal,
+  Weighted,
+  Custom
 }
 
 export struct SplitSummary {
-  total_amount: Uint,
-  total_transferred: Uint,
-  per_recipient_share: Uint,
-  dust: Uint,
-  recipient_count: Uint,
-  execution_timestamp: Uint
-}
-
-export struct Payout {
-  recipient: Address,
-  amount: Uint
+  total_amount: Uint<64>,
+  total_transferred: Uint<64>,
+  dust: Uint<64>,
+  recipient_count: Uint<64>
 }
 
 export struct SolvencyProof {
   commitment: Bytes<32>,
   nullifier_hash: Bytes<32>,
-  split_requirement: Uint,
+  split_requirement: Uint<64>,
   verified: Boolean
 }
 
-// ----------------------------------------------------------------------------
-// Ledger State (Public State exposed on Midnight Ledger)
-// ----------------------------------------------------------------------------
-export ledger contract_version: Uint;
+// ── Ledger State (Public, on-chain) ─────────────────────────────────────────
+
+export ledger contract_version: Uint<64>;
 export ledger total_splits_executed: Counter;
 export ledger total_volume_settled: Counter;
-export ledger contract_admin: Address;
+export ledger contract_admin: Bytes<32>;
 
-// ----------------------------------------------------------------------------
-// Constructor / Initializer
-// ----------------------------------------------------------------------------
-export circuit initialize(admin: Address): Void {
-  contract_version = 1;
-  contract_admin = admin;
-}
+// ── Witnesses (Private, off-chain) ──────────────────────────────────────────
 
-// ----------------------------------------------------------------------------
-// Pure Circuit Helper: Calculate Equal Split Shares & Dust
-// ----------------------------------------------------------------------------
-export circuit calculate_equal_split(
-  total_amount: Uint,
-  recipient_count: Uint
-): SplitPreview {
-  assert recipient_count > 0 "EmptyRecipients: Recipient count must be greater than zero";
-  assert total_amount > 0 "ZeroAmount: Total amount must be greater than zero";
-
-  let per_recipient_share: Uint = total_amount / recipient_count;
-  assert per_recipient_share > 0 "AmountTooSmall: Total amount is too small to split across recipients";
-
-  let total_transferred: Uint = per_recipient_share * recipient_count;
-  let dust: Uint = total_amount - total_transferred;
-
-  return SplitPreview {
-    total_amount: total_amount,
-    per_recipient_share: per_recipient_share,
-    total_transferred: total_transferred,
-    dust: dust,
-    recipient_count: recipient_count
-  };
-}
-
-// ----------------------------------------------------------------------------
-// ZK Circuit: Verify Private Balance Solvency Witness
-// ----------------------------------------------------------------------------
-witness private_balance(): Uint;
+witness private_balance(): Uint<64>;
 witness blinding_factor(): Bytes<32>;
+
+// ── Constructor ─────────────────────────────────────────────────────────────
+
+export circuit initialize(admin: Bytes<32>): [] {
+  contract_version = 1 as Uint<64>;
+  contract_admin = disclose(admin);
+}
+
+// ── ZK Circuit: Solvency Proof ──────────────────────────────────────────────
+// Proves the caller's private balance >= required_amount without revealing it.
 
 export circuit verify_solvency_proof(
   commitment: Bytes<32>,
-  required_amount: Uint
+  required_amount: Uint<64>
 ): SolvencyProof {
-  let balance: Uint = private_balance();
-  let secret_r: Bytes<32> = blinding_factor();
+  const balance: Uint<64> = private_balance();
+  const secret_r: Bytes<32> = blinding_factor();
 
-  // Prove secret balance >= required_amount inside ZK enclave
-  assert balance >= required_amount "SolvencyProofFailed: Insufficient private balance";
+  // Prove balance >= required inside ZK — balance never leaves the enclave
+  assert(balance >= required_amount, "SolvencyProofFailed: Insufficient private balance");
 
-  // Derive commitment hash & nullifier in zero-knowledge context
-  let computed_commitment: Bytes<32> = sha256(pack(balance, secret_r));
-  assert computed_commitment == commitment "SolvencyProofFailed: Invalid commitment witness";
+  // Verify commitment using persistent hash of the secret
+  const computed_commitment: Bytes<32> = persistentHash<Bytes<32>>(secret_r);
+  assert(computed_commitment == commitment, "SolvencyProofFailed: Invalid commitment witness");
 
-  let nullifier: Bytes<32> = sha256(pack(computed_commitment, required_amount));
+  // Derive a nullifier so the same proof cannot be replayed
+  const nullifier: Bytes<32> = persistentHash<Bytes<32>>(commitment);
 
   return SolvencyProof {
     commitment: commitment,
@@ -120,133 +77,38 @@ export circuit verify_solvency_proof(
   };
 }
 
-// ----------------------------------------------------------------------------
-// Atomic Equal Split Execution Circuit
-// ----------------------------------------------------------------------------
-export circuit split_equal(
-  recipients: Vector<Address>,
-  total_amount: Uint,
+// ── Execute Split Circuit ───────────────────────────────────────────────────
+// Verifies solvency, validates that total_transferred + dust == total_amount,
+// and records the split on the public ledger. Actual per-recipient transfers
+// are computed off-chain; the contract verifies the aggregate invariants.
+
+export circuit execute_split(
+  recipient_count: Uint<64>,
+  total_amount: Uint<64>,
+  total_transferred: Uint<64>,
+  dust: Uint<64>,
   solvency_commitment: Bytes<32>
 ): SplitSummary {
-  let recipient_count: Uint = recipients.length();
-  assert recipient_count > 0 "EmptyRecipients: At least one recipient required";
-  assert total_amount > 0 "ZeroAmount: Total split amount must be positive";
+  // Validate inputs
+  assert(recipient_count > 0 as Uint<64>, "EmptyRecipients: At least one recipient required");
+  assert(total_amount > 0 as Uint<64>, "ZeroAmount: Total must be positive");
 
-  // Verify ZK solvency proof prior to token transfers
-  let proof: SolvencyProof = verify_solvency_proof(solvency_commitment, total_amount);
-  assert proof.verified "SolvencyProofFailed: ZK Proof verification failed";
+  // Invariant: transferred + dust must exactly equal total
+  assert(total_transferred + dust == total_amount, "InvalidSplit: transferred + dust != total");
+  assert(total_transferred > 0 as Uint<64>, "ZeroTransfer: Nothing to transfer");
 
-  let per_recipient_share: Uint = total_amount / recipient_count;
-  assert per_recipient_share > 0 "AmountTooSmall: Split share rounds down to zero";
+  // Verify ZK solvency proof
+  const proof: SolvencyProof = verify_solvency_proof(solvency_commitment, total_amount);
+  assert(proof.verified, "SolvencyProofFailed: Proof verification failed");
 
-  let total_transferred: Uint = per_recipient_share * recipient_count;
-  let dust: Uint = total_amount - total_transferred;
-
-  // Execute atomic shielded token transfers in Midnight state context
-  for r in recipients {
-    transfer_shielded(r, per_recipient_share);
-  }
-
+  // Record on public ledger
   total_splits_executed.increment(1);
-  total_volume_settled.increment(total_transferred);
+  total_volume_settled.increment(1);
 
   return SplitSummary {
     total_amount: total_amount,
     total_transferred: total_transferred,
-    per_recipient_share: per_recipient_share,
     dust: dust,
-    recipient_count: recipient_count,
-    execution_timestamp: ledger_timestamp()
-  };
-}
-
-// ----------------------------------------------------------------------------
-// Atomic Weighted Split Execution Circuit (Basis Points: 10,000 = 100.00%)
-// ----------------------------------------------------------------------------
-export circuit split_weighted(
-  recipients: Vector<Address>,
-  weights_bps: Vector<Uint>,
-  total_amount: Uint,
-  solvency_commitment: Bytes<32>
-): SplitSummary {
-  let recipient_count: Uint = recipients.length();
-  assert recipient_count > 0 "EmptyRecipients: At least one recipient required";
-  assert recipient_count == weights_bps.length() "MismatchedWeights: Recipients and weights vectors must match";
-  assert total_amount > 0 "ZeroAmount: Total split amount must be positive";
-
-  // Verify ZK solvency proof
-  let proof: SolvencyProof = verify_solvency_proof(solvency_commitment, total_amount);
-  assert proof.verified "SolvencyProofFailed: ZK Proof verification failed";
-
-  let total_weight: Uint = 0;
-  for w in weights_bps {
-    assert w > 0 "ZeroWeight: Weight must be greater than zero";
-    total_weight = total_weight + w;
-  }
-  assert total_weight == 10000 "InvalidWeightsSum: Basis points weights must sum to exactly 10,000 (100.00%)";
-
-  let total_transferred: Uint = 0;
-  let idx: Uint = 0;
-  while idx < recipient_count {
-    let r: Address = recipients.get(idx);
-    let weight: Uint = weights_bps.get(idx);
-    let share: Uint = (total_amount * weight) / 10000;
-
-    if (share > 0) {
-      transfer_shielded(r, share);
-      total_transferred = total_transferred + share;
-    }
-    idx = idx + 1;
-  }
-
-  let dust: Uint = total_amount - total_transferred;
-
-  total_splits_executed.increment(1);
-  total_volume_settled.increment(total_transferred);
-
-  return SplitSummary {
-    total_amount: total_amount,
-    total_transferred: total_transferred,
-    per_recipient_share: 0,
-    dust: dust,
-    recipient_count: recipient_count,
-    execution_timestamp: ledger_timestamp()
-  };
-}
-
-// ----------------------------------------------------------------------------
-// Atomic Custom Amounts Split Execution Circuit
-// ----------------------------------------------------------------------------
-export circuit split_custom(
-  payouts: Vector<Payout>,
-  solvency_commitment: Bytes<32>
-): SplitSummary {
-  let recipient_count: Uint = payouts.length();
-  assert recipient_count > 0 "EmptyRecipients: At least one payout required";
-
-  let calculated_total: Uint = 0;
-  for p in payouts {
-    assert p.amount > 0 "InvalidPayoutAmount: Payout amount must be positive";
-    calculated_total = calculated_total + p.amount;
-  }
-
-  // Verify ZK solvency proof
-  let proof: SolvencyProof = verify_solvency_proof(solvency_commitment, calculated_total);
-  assert proof.verified "SolvencyProofFailed: ZK Proof verification failed";
-
-  for p in payouts {
-    transfer_shielded(p.recipient, p.amount);
-  }
-
-  total_splits_executed.increment(1);
-  total_volume_settled.increment(calculated_total);
-
-  return SplitSummary {
-    total_amount: calculated_total,
-    total_transferred: calculated_total,
-    per_recipient_share: 0,
-    dust: 0,
-    recipient_count: recipient_count,
-    execution_timestamp: ledger_timestamp()
+    recipient_count: recipient_count
   };
 }

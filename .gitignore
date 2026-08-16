@@ -35,3 +35,9 @@ build/
 # Gemini AI
 .agents/
 .gemini/
+
+# Midnight deployment — temp seed phrase file (auto-cleaned but exclude anyway)
+.compact-deploy.tmp
+
+# Note: contracts/deployed-address.json IS tracked in git intentionally
+# so the deployed contract address is recorded for the team.

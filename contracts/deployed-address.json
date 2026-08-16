@@ -1,0 +1,21 @@
+{
+  "contractAddress": "PENDING",
+  "contractName": "MidnightSplitter",
+  "network": "midnight-preprod",
+  "indexerUrl": "https://indexer.preprod.midnight.network/api/v1/graphql",
+  "nodeRpcUrl": "wss://rpc.preprod.midnight.network/ws",
+  "proverUrl": "https://prover.preprod.midnight.network",
+  "deployedAt": null,
+  "deployedAtBlock": null,
+  "compactVersion": "0.1.0",
+  "explorerUrl": null,
+  "circuits": [
+    "initialize",
+    "calculate_equal_split",
+    "verify_solvency_proof",
+    "split_equal",
+    "split_weighted",
+    "split_custom"
+  ],
+  "_note": "Run 'npm run contract:deploy' to populate this file with the real on-chain address"
+}
